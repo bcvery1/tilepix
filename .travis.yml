@@ -1,0 +1,26 @@
+language: go
+sudo: false
+# The follow addons are a requirement for the pixel library
+addons:
+  apt:
+    packages:
+      - xorg-dev
+      - libx11-dev
+      - libxrandr-dev
+      - libxinerama-dev
+      - libxcursor-dev
+      - libxi-dev
+      - libopenal-dev
+      - libasound2-dev
+go:
+  - tip
+  - 1.12
+  - 1.11
+  - 1.10
+
+install:
+  - go mod download
+
+script:
+  - go test -i ./...
+  - go test -v -cover -race ./...
