@@ -19,15 +19,14 @@ const (
 	GIDVerticalFlip   = 0x40000000
 	GIDDiagonalFlip   = 0x20000000
 	GIDFlip           = GIDHorizontalFlip | GIDVerticalFlip | GIDDiagonalFlip
-	GIDMask           = 0x0fffffff
 )
 
 var (
-	UnknownEncoding       = errors.New("tmx: invalid encoding scheme")
-	UnknownCompression    = errors.New("tmx: invalid compression method")
-	InvalidDecodedDataLen = errors.New("tmx: invalid decoded data length")
-	InvalidGID            = errors.New("tmx: invalid GID")
-	InvalidPointsField    = errors.New("tmx: invalid points string")
+	UnknownEncodingError       = errors.New("tmx: invalid encoding scheme")
+	UnknownCompressionError    = errors.New("tmx: invalid compression method")
+	InvalidDecodedDataLenError = errors.New("tmx: invalid decoded data length")
+	InvalidGIDError            = errors.New("tmx: invalid GID")
+	InvalidPointsFieldError    = errors.New("tmx: invalid points string")
 )
 
 var (
@@ -37,7 +36,6 @@ var (
 type GID uint32 // A tile ID. Could be used for GID or ID.
 type ID uint32
 
-// All structs have their fields exported, and you'll be on the safe side as long as treat them read-only (anyone want to write 100 getters?).
 type Map struct {
 	Version      string        `xml:"title,attr"`
 	Orientation  string        `xml:"orientation,attr"`
@@ -84,16 +82,21 @@ type Layer struct {
 	Visible      bool           `xml:"visible,attr"`
 	Properties   []Property     `xml:"properties>property"`
 	Data         Data           `xml:"data"`
-	DecodedTiles []*DecodedTile // This is the attiribute you'd like to use, not Data. Tile entry at (x,y) is obtained using l.DecodedTiles[y*map.Width+x].
-	Tileset      *Tileset       // This is only set when the layer uses a single tileset and NilLayer is false.
-	Empty        bool           // Set when all entries of the layer are NilTile
+	// DecodedTiles is the attribute you should use instead of `Data`.
+	// Tile entry at (x,y) is obtained using l.DecodedTiles[y*map.Width+x].
+	DecodedTiles []*DecodedTile
+	// Tileset is only set when the layer uses a single tileset and NilLayer is false.
+	Tileset      *Tileset
+	// Empty should be set when all entries of the layer are NilTile.
+	Empty        bool
 }
 
 type Data struct {
 	Encoding    string     `xml:"encoding,attr"`
 	Compression string     `xml:"compression,attr"`
 	RawData     []byte     `xml:",innerxml"`
-	DataTiles   []DataTile `xml:"tile"` // Only used when layer encoding is xml
+	// DataTiles is only used when layer encoding is XML.
+	DataTiles   []DataTile `xml:"tile"`
 }
 
 type ObjectGroup struct {
@@ -153,42 +156,42 @@ func (d *Data) decodeBase64() (data []byte, err error) {
 	case "":
 		comr = encr
 	default:
-		err = UnknownCompression
+		err = UnknownCompressionError
 		return
 	}
 
 	return ioutil.ReadAll(comr)
 }
 
-func (d *Data) decodeCSV() (data []GID, err error) {
+func (d *Data) decodeCSV() ([]GID, error) {
 	cleaner := func(r rune) rune {
 		if (r >= '0' && r <= '9') || r == ',' {
 			return r
 		}
 		return -1
 	}
+
 	rawDataClean := strings.Map(cleaner, string(d.RawData))
 
 	str := strings.Split(string(rawDataClean), ",")
 
 	gids := make([]GID, len(str))
 	for i, s := range str {
-		var d uint64
-		d, err = strconv.ParseUint(s, 10, 32)
+		d, err := strconv.ParseUint(s, 10, 32)
 		if err != nil {
-			return
+			return []GID{}, err
 		}
 		gids[i] = GID(d)
 	}
-	return gids, err
+	return gids, nil
 }
 
-func (m *Map) decodeLayerXML(l *Layer) (gids []GID, err error) {
+func (m *Map) decodeLayerXML(l *Layer) ([]GID, error) {
 	if len(l.Data.DataTiles) != m.Width*m.Height {
-		return []GID{}, InvalidDecodedDataLen
+		return []GID{}, InvalidDecodedDataLenError
 	}
 
-	gids = make([]GID, len(l.Data.DataTiles))
+	gids := make([]GID, len(l.Data.DataTiles))
 	for i := 0; i < len(gids); i++ {
 		gids[i] = l.Data.DataTiles[i].GID
 	}
@@ -203,7 +206,7 @@ func (m *Map) decodeLayerCSV(l *Layer) ([]GID, error) {
 	}
 
 	if len(gids) != m.Width*m.Height {
-		return []GID{}, InvalidDecodedDataLen
+		return []GID{}, InvalidDecodedDataLenError
 	}
 
 	return gids, nil
@@ -216,7 +219,7 @@ func (m *Map) decodeLayerBase64(l *Layer) ([]GID, error) {
 	}
 
 	if len(dataBytes) != m.Width*m.Height*4 {
-		return []GID{}, InvalidDecodedDataLen
+		return []GID{}, InvalidDecodedDataLenError
 	}
 
 	gids := make([]GID, m.Width*m.Height)
@@ -246,14 +249,14 @@ func (m *Map) decodeLayer(l *Layer) ([]GID, error) {
 	case "": // XML "encoding"
 		return m.decodeLayerXML(l)
 	}
-	return []GID{}, UnknownEncoding
+	return []GID{}, UnknownEncodingError
 }
 
-func (m *Map) decodeLayers() (err error) {
+func (m *Map) decodeLayers() error {
 	for i := 0; i < len(m.Layers); i++ {
 		l := &m.Layers[i]
-		var gids []GID
-		if gids, err = m.decodeLayer(l); err != nil {
+		gids, err := m.decodeLayer(l)
+		if err != nil {
 			return err
 		}
 
@@ -265,6 +268,7 @@ func (m *Map) decodeLayers() (err error) {
 			}
 		}
 	}
+
 	return nil
 }
 
@@ -291,7 +295,7 @@ func decodePoints(s string) (points []Point, err error) {
 	for i, pointString := range pointStrings {
 		coordStrings := strings.Split(pointString, ",")
 		if len(coordStrings) != 2 {
-			return []Point{}, InvalidPointsField
+			return []Point{}, InvalidPointsFieldError
 		}
 
 		points[i].X, err = strconv.Atoi(coordStrings[0])
@@ -307,9 +311,8 @@ func decodePoints(s string) (points []Point, err error) {
 	return
 }
 
-func getTileset(m *Map, l *Layer) (tileset *Tileset, isEmpty, usesMultipleTilesets bool) {
-	for i := 0; i < len(l.DecodedTiles); i++ {
-		tile := l.DecodedTiles[i]
+func getTileset(_ *Map, l *Layer) (tileset *Tileset, isEmpty, usesMultipleTilesets bool) {
+	for _, tile := range l.DecodedTiles {
 		if !tile.Nil {
 			if tileset == nil {
 				tileset = tile.Tileset
@@ -334,8 +337,7 @@ func Read(r io.Reader) (*Map, error) {
 		return nil, err
 	}
 
-	err := m.decodeLayers()
-	if err != nil {
+	if err := m.decodeLayers(); err != nil {
 		return nil, err
 	}
 
@@ -360,12 +362,7 @@ func ReadFile(filePath string) (*Map, error) {
 
 	defer f.Close()
 
-	newMap, err := Read(f)
-	if err != nil {
-		return nil, err
-	}
-
-	return newMap, err
+	return Read(f)
 
 }
 
@@ -389,7 +386,7 @@ func (m *Map) DecodeGID(gid GID) (*DecodedTile, error) {
 		}
 	}
 
-	return nil, InvalidGID // Should never hapen for a valid TMX file.
+	return nil, InvalidGIDError
 }
 
 type DecodedTile struct {
