@@ -25,6 +25,9 @@ Please ensure that before you create an issue.  Pull requests without previously
 
 When creating a pull request, please add yourself to the contributors file (if you're not already in there).
 
+There is a [coding standard](https://github.com/bcvery1/tilepix/blob/master/CODING_STANDARD.md) which is a requirement
+for all pull requests.
+
 #### Add tests
 Additional tests, when they are meaningful, are a really useful contribution, and a good first issue.
 
