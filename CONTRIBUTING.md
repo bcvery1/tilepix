@@ -23,6 +23,8 @@ If you have a good idea for a feature (no matter how large or small) create an [
 ### Create a pull request
 Please ensure that before you create an issue.  Pull requests without previously raised issues will be rejected.
 
+When creating a pull request, please add yourself to the contributors file (if you're not already in there).
+
 #### Add tests
 Additional tests, when they are meaningful, are a really useful contribution, and a good first issue.
 
