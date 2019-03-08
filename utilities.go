@@ -28,19 +28,19 @@ func loadPictureFromFile(path string) (pixel.Picture, error) {
 	return loadPicture(f)
 }
 
-func loadSprite(img io.Reader) (*pixel.Sprite, error) {
+func loadSprite(img io.Reader) (*pixel.Sprite, pixel.Picture, error) {
 	pic, err := loadPicture(img)
 	if err != nil {
-		return nil, err
+		return nil, nil, err
 	}
 	sprite := pixel.NewSprite(pic, pic.Bounds())
-	return sprite, nil
+	return sprite, pic, nil
 }
 
-func loadSpriteFromFile(path string) (*pixel.Sprite, error) {
+func loadSpriteFromFile(path string) (*pixel.Sprite, pixel.Picture, error) {
 	f, err := os.OpenFile(path, os.O_RDONLY, 0444)
 	if err != nil {
-		return nil, err
+		return nil, nil, err
 	}
 	defer f.Close()
 
