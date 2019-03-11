@@ -4,5 +4,6 @@
 [![GitHub](https://img.shields.io/github/license/bcvery1/tilepix.svg)](https://github.com/bcvery1/tilepix/blob/master/LICENSE)
 [![GoDoc](https://godoc.org/github.com/bcvery1/tilepix?status.svg)](https://godoc.org/github.com/bcvery1/tilepix)
 
+![TilePixLogo](https://github.com/bcvery1/tilepix/blob/master/.github/assets/logo_large.png)
 # TilePix
 Library for combining tiled maps with pixel
