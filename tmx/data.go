@@ -12,11 +12,11 @@ import (
 )
 
 type Data struct {
-	Encoding    string     `xml:"encoding,attr"`
-	Compression string     `xml:"compression,attr"`
-	RawData     []byte     `xml:",innerxml"`
+	Encoding    string `xml:"encoding,attr"`
+	Compression string `xml:"compression,attr"`
+	RawData     []byte `xml:",innerxml"`
 	// DataTiles is only used when layer encoding is XML.
-	DataTiles   []DataTile `xml:"tile"`
+	DataTiles []DataTile `xml:"tile"`
 }
 
 func (d *Data) decodeBase64() (data []byte, err error) {
@@ -63,7 +63,7 @@ func (d *Data) decodeCSV() ([]GID, error) {
 	for i, s := range str {
 		d, err := strconv.ParseUint(s, 10, 32)
 		if err != nil {
-			return []GID{}, err
+			return nil, err
 		}
 		gids[i] = GID(d)
 	}
