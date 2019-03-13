@@ -207,6 +207,8 @@ func (l *Layer) Batch() (*pixel.Batch, error) {
 		l.Tileset.sprite = sprite
 	}
 
+	l.batch.Clear()
+
 	return l.batch, nil
 }
 
