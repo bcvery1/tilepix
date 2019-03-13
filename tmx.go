@@ -25,6 +25,7 @@ const (
 	gidFlip           = gidHorizontalFlip | gidVerticalFlip | gidDiagonalFlip
 )
 
+// Errors which are returned from various places in the package.
 var (
 	UnknownEncodingError       = errors.New("tmx: invalid encoding scheme")
 	UnknownCompressionError    = errors.New("tmx: invalid compression method")
@@ -34,16 +35,22 @@ var (
 )
 
 var (
+	// NilTile is a tile with no tile set.  Will be skipped over when drawing.
 	NilTile = &DecodedTile{Nil: true}
 )
 
-type GID uint32 // A tile ID. Could be used for GID or ID.
+// GID is a global tile ID. Tiles can use GID or ID.
+type GID uint32
+
+// ID is a tile ID. Tiles can use GID or ID.
 type ID uint32
 
+// DataTile is a tile from a data object.
 type DataTile struct {
 	GID GID `xml:"gid,attr"`
 }
 
+// Read will read, decode and initialise a Tiled Map from a data reader.
 func Read(r io.Reader) (*Map, error) {
 	log.Debug("Read: reading from io.Reader")
 
@@ -76,6 +83,7 @@ func Read(r io.Reader) (*Map, error) {
 	return m, nil
 }
 
+// ReadFile will read, decode and initialise a Tiled Map from a file path.
 func ReadFile(filePath string) (*Map, error) {
 	log.WithField("Filepath", filePath).Debug("ReadFile: reading file")
 
@@ -97,6 +105,7 @@ func ReadFile(filePath string) (*Map, error) {
 
 */
 
+// Data is a TMX file structure holding data.
 type Data struct {
 	Encoding    string `xml:"encoding,attr"`
 	Compression string `xml:"compression,attr"`
@@ -172,6 +181,7 @@ func (d *Data) decodeCSV() ([]GID, error) {
                 |___/
 */
 
+// Image is a TMX file structure which referencing an image file, with associated properies.
 type Image struct {
 	Source string `xml:"source,attr"`
 	Trans  string `xml:"trans,attr"`
@@ -190,6 +200,7 @@ type Image struct {
             |__/
 */
 
+// Layer is a TMX file structure which can hold any type of Tiled layer.
 type Layer struct {
 	Name       string     `xml:"name,attr"`
 	Opacity    float32    `xml:"opacity,attr"`
@@ -235,6 +246,7 @@ func (l *Layer) Batch() (*pixel.Batch, error) {
 	return l.batch, nil
 }
 
+// Draw will use the Layers' batch to draw all tiles within the Layer to the target.
 func (l *Layer) Draw(target pixel.Target) error {
 	// Initialise the batch
 	if _, err := l.Batch(); err != nil {
@@ -355,6 +367,7 @@ func (l *Layer) decodeLayerBase64(width, height int) ([]GID, error) {
              |_|
 */
 
+// Map is a TMX file structure representing the map as a whole.
 type Map struct {
 	Version      string        `xml:"title,attr"`
 	Orientation  string        `xml:"orientation,attr"`
@@ -380,7 +393,7 @@ func (m *Map) DrawAll(target pixel.Target) error {
 	return nil
 }
 
-func (m *Map) DecodeGID(gid GID) (*DecodedTile, error) {
+func (m *Map) decodeGID(gid GID) (*DecodedTile, error) {
 	if gid == 0 {
 		return NilTile, nil
 	}
@@ -400,7 +413,7 @@ func (m *Map) DecodeGID(gid GID) (*DecodedTile, error) {
 		}
 	}
 
-	log.WithError(InvalidGIDError).Error("May.DecodeGID: GID is invalid")
+	log.WithError(InvalidGIDError).Error("Map.decodeGID: GID is invalid")
 	return nil, InvalidGIDError
 }
 
@@ -414,7 +427,7 @@ func (m *Map) decodeLayers() error {
 
 		l.DecodedTiles = make([]*DecodedTile, len(gids))
 		for j := 0; j < len(gids); j++ {
-			decTile, err := m.DecodeGID(gids[j])
+			decTile, err := m.decodeGID(gids[j])
 			if err != nil {
 				log.WithError(err).Error("Map.decodeLayers: could not GID")
 				return err
@@ -434,6 +447,7 @@ func (m *Map) decodeLayers() error {
            |__/
 */
 
+// Object is a TMX file struture holding a specific Tiled object.
 type Object struct {
 	Name       string     `xml:"name,attr"`
 	Type       string     `xml:"type,attr"`
@@ -456,6 +470,7 @@ type Object struct {
            |__/                             |_|
 */
 
+// ObjectGroup is a TMX file structure holding a Tiled ObjectGroup.
 type ObjectGroup struct {
 	Name       string     `xml:"name,attr"`
 	Color      string     `xml:"color,attr"`
@@ -472,9 +487,15 @@ type ObjectGroup struct {
  |_| \___/_|_||_\__|
 */
 
+// Point is a TMX file structure holding a Tiled Point object.
 type Point struct {
 	X int
 	Y int
+}
+
+// V converts the Tiled Point to a Pixel Vector.
+func (p *Point) V() pixel.Vec {
+	return pixel.V(float64(p.X), float64(p.Y))
 }
 
 func decodePoints(s string) (points []Point, err error) {
@@ -511,10 +532,12 @@ func decodePoints(s string) (points []Point, err error) {
             |__/|___/
 */
 
+// Polygon is a TMX file structure representing a Tiled Polygon.
 type Polygon struct {
 	Points string `xml:"points,attr"`
 }
 
+// Decode will return a slice of points which make up this polygon.
 func (p *Polygon) Decode() ([]Point, error) {
 	return decodePoints(p.Points)
 }
@@ -527,10 +550,12 @@ func (p *Polygon) Decode() ([]Point, error) {
             |__/
 */
 
+// PolyLine is a TMX file structure representing a Tiled Polyline.
 type PolyLine struct {
 	Points string `xml:"points,attr"`
 }
 
+// Decode will return a slice of points which make up this polyline.
 func (p *PolyLine) Decode() ([]Point, error) {
 	return decodePoints(p.Points)
 }
@@ -543,6 +568,7 @@ func (p *PolyLine) Decode() ([]Point, error) {
              |_|                |__/
 */
 
+// Property is a TMX file structure which holds a Tiled property.
 type Property struct {
 	Name  string `xml:"name,attr"`
 	Value string `xml:"value,attr"`
@@ -555,11 +581,13 @@ type Property struct {
    |_| |_|_\___|
 */
 
+// Tile is a TMX file structure which holds a Tiled tile.
 type Tile struct {
 	ID    ID    `xml:"id,attr"`
 	Image Image `xml:"image"`
 }
 
+// DecodedTile is a convenience struct, which stores the decoded data from a Tile.
 type DecodedTile struct {
 	ID             ID
 	Tileset        *Tileset
@@ -569,6 +597,8 @@ type DecodedTile struct {
 	Nil            bool
 }
 
+// IsNil returns whether this tile is nil.  If so, it means there is nothing set for the tile, and should be skipped in
+// drawing.
 func (t *DecodedTile) IsNil() bool {
 	return t.Nil
 }
@@ -580,6 +610,7 @@ func (t *DecodedTile) IsNil() bool {
    |_| |_|_\___/__/\___|\__|
 */
 
+// Tileset is a TMX file structure which represents a Tiled Tileset
 type Tileset struct {
 	FirstGID   GID        `xml:"firstgid,attr"`
 	Source     string     `xml:"source,attr"`
