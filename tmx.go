@@ -17,10 +17,10 @@ import (
 )
 
 const (
-	GIDHorizontalFlip = 0x80000000
-	GIDVerticalFlip   = 0x40000000
-	GIDDiagonalFlip   = 0x20000000
-	GIDFlip           = GIDHorizontalFlip | GIDVerticalFlip | GIDDiagonalFlip
+	gidHorizontalFlip = 0x80000000
+	gidVerticalFlip   = 0x40000000
+	gidDiagonalFlip   = 0x20000000
+	gidFlip           = gidHorizontalFlip | gidVerticalFlip | gidDiagonalFlip
 )
 
 var (
@@ -351,16 +351,16 @@ func (m *Map) DecodeGID(gid GID) (*DecodedTile, error) {
 		return NilTile, nil
 	}
 
-	gidBare := gid &^ GIDFlip
+	gidBare := gid &^ gidFlip
 
 	for i := len(m.Tilesets) - 1; i >= 0; i-- {
 		if m.Tilesets[i].FirstGID <= gidBare {
 			return &DecodedTile{
 				ID:             ID(gidBare - m.Tilesets[i].FirstGID),
 				Tileset:        &m.Tilesets[i],
-				HorizontalFlip: gid&GIDHorizontalFlip != 0,
-				VerticalFlip:   gid&GIDVerticalFlip != 0,
-				DiagonalFlip:   gid&GIDDiagonalFlip != 0,
+				HorizontalFlip: gid&gidHorizontalFlip != 0,
+				VerticalFlip:   gid&gidVerticalFlip != 0,
+				DiagonalFlip:   gid&gidDiagonalFlip != 0,
 				Nil:            false,
 			}, nil
 		}
