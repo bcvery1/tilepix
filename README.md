@@ -41,6 +41,11 @@ package main
 import (
 	"color"
 	
+	// We must use blank imports for any image formats in the tileset image sources.
+	// You will get an error if a blank import is not made; TilePix does not import specific image formats, that is the
+	// responsibility of the calling code.
+	_ "image/png"
+	
 	"github.com/bcvery1/tilepix"
 	
 	"github.com/faiface/pixel"
