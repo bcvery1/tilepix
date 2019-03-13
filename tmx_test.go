@@ -1,59 +1,59 @@
-package tmx_test
+package tilepix_test
 
 import (
 	"os"
 	"testing"
 
-	"github.com/bcvery1/tilepix/tmx"
+	"github.com/bcvery1/tilepix"
 )
 
 func TestReadFile(t *testing.T) {
-	tests := []struct{
-		name string
+	tests := []struct {
+		name     string
 		filepath string
-		want *tmx.Map
-		wantErr bool
+		want     *tilepix.Map
+		wantErr  bool
 	}{
 		{
-			name: "base64",
+			name:     "base64",
 			filepath: "testdata/base64.tmx",
-			want: nil,
-			wantErr: false,
+			want:     nil,
+			wantErr:  false,
 		},
 		{
-			name: "base64-zlib",
+			name:     "base64-zlib",
 			filepath: "testdata/base64-zlib.tmx",
-			want: nil,
-			wantErr: false,
+			want:     nil,
+			wantErr:  false,
 		},
 		{
-			name: "base64-gzip",
+			name:     "base64-gzip",
 			filepath: "testdata/base64-gzip.tmx",
-			want: nil,
-			wantErr: false,
+			want:     nil,
+			wantErr:  false,
 		},
 		{
-			name: "csv",
+			name:     "csv",
 			filepath: "testdata/csv.tmx",
-			want: nil,
-			wantErr: false,
+			want:     nil,
+			wantErr:  false,
 		},
 		{
-			name: "xml",
+			name:     "xml",
 			filepath: "testdata/xml.tmx",
-			want: nil,
-			wantErr: false,
+			want:     nil,
+			wantErr:  false,
 		},
 		{
-			name: "missing file",
+			name:     "missing file",
 			filepath: "testdata/foo.tmx",
-			want: nil,
-			wantErr: true,
+			want:     nil,
+			wantErr:  true,
 		},
 	}
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
-			_, err := tmx.ReadFile(tt.filepath)
+			_, err := tilepix.ReadFile(tt.filepath)
 
 			if !tt.wantErr && err != nil {
 				t.Errorf("tmx.ReadFile(): got unexpected error: %v", err)
@@ -73,7 +73,7 @@ func TestProperties(t *testing.T) {
 		t.Fatal(err)
 	}
 
-	m, err := tmx.Read(r)
+	m, err := tilepix.Read(r)
 	if err != nil {
 		t.Fatal(err)
 	}
