@@ -14,6 +14,8 @@ import (
 	"strings"
 
 	"github.com/faiface/pixel"
+
+	log "github.com/sirupsen/logrus"
 )
 
 const (
@@ -43,23 +45,29 @@ type DataTile struct {
 }
 
 func Read(r io.Reader) (*Map, error) {
+	log.Debug("Read: reading from io.Reader")
+
 	d := xml.NewDecoder(r)
 
 	m := new(Map)
 	if err := d.Decode(m); err != nil {
+		log.WithError(err).Error("Read: could not decode to Map")
 		return nil, err
 	}
 
 	if err := m.decodeLayers(); err != nil {
+		log.WithError(err).Error("Read: could not decode layers")
 		return nil, err
 	}
 
+	log.WithField("Layer count", len(m.Layers)).Debug("Read processing layer tilesets")
 	for i := 0; i < len(m.Layers); i++ {
 		l := m.Layers[i]
 		l.mapParent = m
 
 		tileset, isEmpty, usesMultipleTilesets := getTileset(l)
 		if usesMultipleTilesets {
+			log.Debug("Read: multiple tilesets in use")
 			continue
 		}
 		l.Empty, l.Tileset = isEmpty, tileset
@@ -69,11 +77,13 @@ func Read(r io.Reader) (*Map, error) {
 }
 
 func ReadFile(filePath string) (*Map, error) {
+	log.WithField("Filepath", filePath).Debug("ReadFile: reading file")
+
 	f, err := os.Open(filePath)
 	if err != nil {
+		log.WithError(err).Error("ReadFile: could not open file")
 		return nil, err
 	}
-
 	defer f.Close()
 
 	return Read(f)
@@ -104,19 +114,26 @@ func (d *Data) decodeBase64() (data []byte, err error) {
 	var comr io.Reader
 	switch d.Compression {
 	case "gzip":
+		log.Debug("decodeBase64: compression is gzip")
+
 		comr, err = gzip.NewReader(encr)
 		if err != nil {
 			return
 		}
 	case "zlib":
+		log.Debug("decodeBase64: compression is zlib")
+
 		comr, err = zlib.NewReader(encr)
 		if err != nil {
 			return
 		}
 	case "":
+		log.Debug("decodeBase64: no compression")
+
 		comr = encr
 	default:
 		err = UnknownCompressionError
+		log.WithError(UnknownCompressionError).WithField("Compression", d.Compression).Error("decodeBase64: unable to handle this compression type")
 		return
 	}
 
@@ -139,6 +156,7 @@ func (d *Data) decodeCSV() ([]GID, error) {
 	for i, s := range str {
 		d, err := strconv.ParseUint(s, 10, 32)
 		if err != nil {
+			log.WithError(err).WithField("String to convert", s).Error("decodeCSV: could not parse UInt")
 			return nil, err
 		}
 		gids[i] = GID(d)
@@ -193,13 +211,18 @@ type Layer struct {
 // Batch returns the batch with the picture data from the tileset associated with this layer.
 func (l *Layer) Batch() (*pixel.Batch, error) {
 	if l.batch == nil {
+		log.Debug("Layer.Batch: batch not initialised, creating")
+
 		if l.Tileset == nil {
-			return nil, errors.New("cannot create sprite from nil tileset")
+			err := errors.New("cannot create sprite from nil tileset")
+			log.WithError(err).Error("Layer.Batch: layers' tileset is nil")
+			return nil, err
 		}
 
 		// TODO(need to do this either by file or reader)
 		sprite, pictureData, err := loadSpriteFromFile(l.Tileset.Image.Source)
 		if err != nil {
+			log.WithError(err).Error("Layer.Batch: could not load sprite from file")
 			return nil, err
 		}
 
@@ -215,6 +238,7 @@ func (l *Layer) Batch() (*pixel.Batch, error) {
 func (l *Layer) Draw(target pixel.Target) error {
 	// Initialise the batch
 	if _, err := l.Batch(); err != nil {
+		log.WithError(err).Error("Layer.Draw: could not get batch")
 		return err
 	}
 
@@ -248,6 +272,8 @@ func (l *Layer) Draw(target pixel.Target) error {
 }
 
 func (l *Layer) decode(width, height int) ([]GID, error) {
+	log.WithField("Encoding", l.Data.Encoding).Debug("Layer.decode: determining encoding")
+
 	switch l.Data.Encoding {
 	case "csv":
 		return l.decodeLayerCSV(width, height)
@@ -257,11 +283,14 @@ func (l *Layer) decode(width, height int) ([]GID, error) {
 		// XML "encoding"
 		return l.decodeLayerXML(width, height)
 	}
+
+	log.WithError(UnknownEncodingError).Error("Layer.decode: unrecognised encoding")
 	return nil, UnknownEncodingError
 }
 
 func (l *Layer) decodeLayerXML(width, height int) ([]GID, error) {
 	if len(l.Data.DataTiles) != width*height {
+		log.WithError(InvalidDecodedDataLenError).Error("Layer.decodeLayerXML: data length mismatch")
 		return nil, InvalidDecodedDataLenError
 	}
 
@@ -276,10 +305,12 @@ func (l *Layer) decodeLayerXML(width, height int) ([]GID, error) {
 func (l *Layer) decodeLayerCSV(width, height int) ([]GID, error) {
 	gids, err := l.Data.decodeCSV()
 	if err != nil {
+		log.WithError(err).Error("Layer.decodeLayerCSV: could not decode CSV")
 		return nil, err
 	}
 
 	if len(gids) != width*height {
+		log.WithError(InvalidDecodedDataLenError).Error("Layer.decodeLayerCSV: data length mismatch")
 		return nil, InvalidDecodedDataLenError
 	}
 
@@ -289,10 +320,12 @@ func (l *Layer) decodeLayerCSV(width, height int) ([]GID, error) {
 func (l *Layer) decodeLayerBase64(width, height int) ([]GID, error) {
 	dataBytes, err := l.Data.decodeBase64()
 	if err != nil {
+		log.WithError(err).Error("Layer.decodeLayerBase64: could not decode base64")
 		return nil, err
 	}
 
 	if len(dataBytes) != width*height*4 {
+		log.WithError(InvalidDecodedDataLenError).Error("Layer.decodeLayerBase64: data length mismatch")
 		return nil, InvalidDecodedDataLenError
 	}
 
@@ -339,6 +372,7 @@ type Map struct {
 func (m *Map) DrawAll(target pixel.Target) error {
 	for _, l := range m.Layers {
 		if err := l.Draw(target); err != nil {
+			log.WithError(err).Error("Map.DrawAll: could not draw layer")
 			return err
 		}
 	}
@@ -366,6 +400,7 @@ func (m *Map) DecodeGID(gid GID) (*DecodedTile, error) {
 		}
 	}
 
+	log.WithError(InvalidGIDError).Error("May.DecodeGID: GID is invalid")
 	return nil, InvalidGIDError
 }
 
@@ -373,6 +408,7 @@ func (m *Map) decodeLayers() error {
 	for _, l := range m.Layers {
 		gids, err := l.decode(m.Width, m.Height)
 		if err != nil {
+			log.WithError(err).Error("Map.decodeLayers: could not decode layer")
 			return err
 		}
 
@@ -380,6 +416,7 @@ func (m *Map) decodeLayers() error {
 		for j := 0; j < len(gids); j++ {
 			decTile, err := m.DecodeGID(gids[j])
 			if err != nil {
+				log.WithError(err).Error("Map.decodeLayers: could not GID")
 				return err
 			}
 			l.DecodedTiles[j] = decTile
@@ -447,17 +484,20 @@ func decodePoints(s string) (points []Point, err error) {
 	for i, pointString := range pointStrings {
 		coordStrings := strings.Split(pointString, ",")
 		if len(coordStrings) != 2 {
-			return []Point{}, InvalidPointsFieldError
+			log.WithError(InvalidPointsFieldError).WithField("Co-ordinate strings", coordStrings).Error("decodePoints: mismatch co-ordinates string length")
+			return nil, InvalidPointsFieldError
 		}
 
 		points[i].X, err = strconv.Atoi(coordStrings[0])
 		if err != nil {
-			return []Point{}, err
+			log.WithError(err).WithField("Point string", coordStrings[0]).Error("decodePoints: could not parse X co-ordinate string")
+			return nil, err
 		}
 
 		points[i].Y, err = strconv.Atoi(coordStrings[1])
 		if err != nil {
-			return []Point{}, err
+			log.WithError(err).WithField("Point string", coordStrings[1]).Error("decodePoints: could not parse X co-ordinate string")
+			return nil, err
 		}
 	}
 	return

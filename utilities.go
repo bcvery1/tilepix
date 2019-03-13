@@ -6,6 +6,8 @@ import (
 	"os"
 
 	"github.com/faiface/pixel"
+
+	log "github.com/sirupsen/logrus"
 )
 
 // loadPicture loads picture data from a Reader and will decode based using the built in image
@@ -13,6 +15,7 @@ import (
 func loadPicture(img io.Reader) (pixel.Picture, error) {
 	imgDecoded, _, err := image.Decode(img)
 	if err != nil {
+		log.WithError(err).Error("loadPicture: could not decode image")
 		return nil, err
 	}
 	return pixel.PictureDataFromImage(imgDecoded), nil
@@ -21,6 +24,7 @@ func loadPicture(img io.Reader) (pixel.Picture, error) {
 func loadPictureFromFile(path string) (pixel.Picture, error) {
 	f, err := os.OpenFile(path, os.O_RDONLY, 0444)
 	if err != nil {
+		log.WithError(err).WithField("Filepath", path).Error("loadPictureFromFile: could not open file")
 		return nil, err
 	}
 	defer f.Close()
@@ -31,6 +35,7 @@ func loadPictureFromFile(path string) (pixel.Picture, error) {
 func loadSprite(img io.Reader) (*pixel.Sprite, pixel.Picture, error) {
 	pic, err := loadPicture(img)
 	if err != nil {
+		log.WithError(err).Error("loadSprite: could not load picture")
 		return nil, nil, err
 	}
 	sprite := pixel.NewSprite(pic, pic.Bounds())
@@ -40,6 +45,7 @@ func loadSprite(img io.Reader) (*pixel.Sprite, pixel.Picture, error) {
 func loadSpriteFromFile(path string) (*pixel.Sprite, pixel.Picture, error) {
 	f, err := os.OpenFile(path, os.O_RDONLY, 0444)
 	if err != nil {
+		log.WithError(err).WithField("Filepath", path).Error("loadSpriteFromFile: could not open file")
 		return nil, nil, err
 	}
 	defer f.Close()
