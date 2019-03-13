@@ -58,7 +58,7 @@ func Read(r io.Reader) (*Map, error) {
 		l := &m.Layers[i]
 		l.mapParent = m
 
-		tileset, isEmpty, usesMultipleTilesets := getTileset(m, l)
+		tileset, isEmpty, usesMultipleTilesets := getTileset(l)
 		if usesMultipleTilesets {
 			continue
 		}
@@ -193,6 +193,10 @@ type Layer struct {
 // Batch returns the batch with the picture data from the tileset associated with this layer.
 func (l *Layer) Batch() (*pixel.Batch, error) {
 	if l.batch == nil {
+		if l.Tileset == nil {
+			return nil, errors.New("cannot create sprite from nil tileset")
+		}
+
 		// TODO(need to do this either by file or reader)
 		sprite, pictureData, err := loadSpriteFromFile(l.Tileset.Image.Source)
 		if err != nil {
@@ -217,8 +221,7 @@ func (l *Layer) Draw(target pixel.Target) error {
 		ts := l.Tileset
 		tID := int(tile.ID)
 
-		if tID == 0 {
-			// Tile ID 0 means blank, skip it.
+		if tile.IsNil() {
 			continue
 		}
 
@@ -364,18 +367,20 @@ func (m *Map) DecodeGID(gid GID) (*DecodedTile, error) {
 }
 
 func (m *Map) decodeLayers() error {
-	for _, l := range m.Layers {
+	for i := 0; i < len(m.Layers); i++ {
+		l := &m.Layers[i]
 		gids, err := l.decode(m.Width, m.Height)
 		if err != nil {
 			return err
 		}
 
 		l.DecodedTiles = make([]*DecodedTile, len(gids))
-		for j := 0; j < len(l.DecodedTiles); j++ {
-			l.DecodedTiles[j], err = m.DecodeGID(gids[j])
+		for j := 0; j < len(gids); j++ {
+			decTile, err := m.DecodeGID(gids[j])
 			if err != nil {
 				return err
 			}
+			l.DecodedTiles[j] = decTile
 		}
 	}
 
@@ -550,7 +555,7 @@ type Tileset struct {
 	sprite *pixel.Sprite
 }
 
-func getTileset(_ *Map, l *Layer) (tileset *Tileset, isEmpty, usesMultipleTilesets bool) {
+func getTileset(l *Layer) (tileset *Tileset, isEmpty, usesMultipleTilesets bool) {
 	for _, tile := range l.DecodedTiles {
 		if !tile.Nil {
 			if tileset == nil {
