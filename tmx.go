@@ -55,7 +55,7 @@ func Read(r io.Reader) (*Map, error) {
 	}
 
 	for i := 0; i < len(m.Layers); i++ {
-		l := &m.Layers[i]
+		l := m.Layers[i]
 		l.mapParent = m
 
 		tileset, isEmpty, usesMultipleTilesets := getTileset(l)
@@ -216,9 +216,11 @@ func (l *Layer) Draw(target pixel.Target) error {
 		return err
 	}
 
+	ts := l.Tileset
+	numRows := ts.Tilecount / ts.Columns
+
 	// Loop through each decoded tile
 	for tileIndex, tile := range l.DecodedTiles {
-		ts := l.Tileset
 		tID := int(tile.ID)
 
 		if tile.IsNil() {
@@ -226,7 +228,6 @@ func (l *Layer) Draw(target pixel.Target) error {
 		}
 
 		// Calculate the framing for the tile within its tileset's source image
-		numRows := ts.Tilecount / ts.Columns
 		x, y := tileIDToCoord(tID, ts.Columns, numRows)
 		gamePos := indexToGamePos(tileIndex, l.mapParent.Width, l.mapParent.Height)
 
@@ -328,7 +329,7 @@ type Map struct {
 	TileHeight   int           `xml:"tileheight,attr"`
 	Properties   []Property    `xml:"properties>property"`
 	Tilesets     []Tileset     `xml:"tileset"`
-	Layers       []Layer       `xml:"layer"`
+	Layers       []*Layer      `xml:"layer"`
 	ObjectGroups []ObjectGroup `xml:"objectgroup"`
 }
 
@@ -367,8 +368,7 @@ func (m *Map) DecodeGID(gid GID) (*DecodedTile, error) {
 }
 
 func (m *Map) decodeLayers() error {
-	for i := 0; i < len(m.Layers); i++ {
-		l := &m.Layers[i]
+	for _, l := range m.Layers {
 		gids, err := l.decode(m.Width, m.Height)
 		if err != nil {
 			return err
