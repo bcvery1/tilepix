@@ -1,5 +1,10 @@
 package tmx
 
+import (
+	"github.com/bcvery1/tilepix/utilities"
+	"github.com/faiface/pixel"
+)
+
 type Layer struct {
 	Name       string     `xml:"name,attr"`
 	Opacity    float32    `xml:"opacity,attr"`
@@ -13,6 +18,60 @@ type Layer struct {
 	Tileset *Tileset
 	// Empty should be set when all entries of the layer are NilTile.
 	Empty bool
+
+	batch     *pixel.Batch
+	mapParent *Map
+}
+
+// Batch returns the batch with the picture data from the tileset associated with this layer.
+func (l *Layer) Batch() (*pixel.Batch, error) {
+	if l.batch == nil {
+		// TODO(need to do this either by file or reader)
+		sprite, pictureData, err := utilities.LoadSpriteFromFile(l.Tileset.Image.Source)
+		if err != nil {
+			return nil, err
+		}
+
+		l.batch = pixel.NewBatch(&pixel.TrianglesData{}, pictureData)
+		l.Tileset.sprite = sprite
+	}
+
+	return l.batch, nil
+}
+
+func (l *Layer) Draw(target pixel.Target) error {
+	// Initialise the batch
+	if _, err := l.Batch(); err != nil {
+		return err
+	}
+
+	// Loop through each decoded tile
+	for tileIndex, tile := range l.DecodedTiles {
+		ts := l.Tileset
+		tID := int(tile.ID)
+
+		if tID == 0 {
+			// Tile ID 0 means blank, skip it.
+			continue
+		}
+
+		// Calculate the framing for the tile within its tileset's source image
+		numRows := ts.Tilecount / ts.Columns
+		x, y := utilities.TileIDToCoord(tID, ts.Columns, numRows)
+		gamePos := utilities.IndexToGamePos(tileIndex, l.mapParent.Width, l.mapParent.Height)
+
+		iX := float64(x) * float64(ts.TileWidth)
+		fX := iX + float64(ts.TileWidth)
+		iY := float64(y) * float64(ts.TileHeight)
+		fY := iY + float64(ts.TileHeight)
+
+		l.Tileset.sprite.Set(l.Tileset.sprite.Picture(), pixel.R(iX, iY, fX, fY))
+		pos := gamePos.ScaledXY(pixel.V(float64(ts.TileWidth), float64(ts.TileHeight)))
+		l.Tileset.sprite.Draw(l.batch, pixel.IM.Moved(pos))
+	}
+
+	l.batch.Draw(target)
+	return nil
 }
 
 func (l *Layer) decode(width, height int) ([]GID, error) {

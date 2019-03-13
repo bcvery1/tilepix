@@ -1,5 +1,7 @@
 package tmx
 
+import "github.com/faiface/pixel"
+
 type Map struct {
 	Version      string        `xml:"title,attr"`
 	Orientation  string        `xml:"orientation,attr"`
@@ -11,6 +13,17 @@ type Map struct {
 	Tilesets     []Tileset     `xml:"tileset"`
 	Layers       []Layer       `xml:"layer"`
 	ObjectGroups []ObjectGroup `xml:"objectgroup"`
+}
+
+// DrawAll will draw all tile layers to the target.  This will use `pixel.Batch`s for efficiency.
+func (m *Map) DrawAll(target pixel.Target) error {
+	for _, l := range m.Layers {
+		if err := l.Draw(target); err != nil {
+			return err
+		}
+	}
+
+	return nil
 }
 
 func (m *Map) DecodeGID(gid GID) (*DecodedTile, error) {

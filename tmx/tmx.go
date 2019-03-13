@@ -47,6 +47,7 @@ func Read(r io.Reader) (*Map, error) {
 
 	for i := 0; i < len(m.Layers); i++ {
 		l := &m.Layers[i]
+		l.mapParent = m
 
 		tileset, isEmpty, usesMultipleTilesets := getTileset(m, l)
 		if usesMultipleTilesets {
@@ -67,5 +68,4 @@ func ReadFile(filePath string) (*Map, error) {
 	defer f.Close()
 
 	return Read(f)
-
 }
