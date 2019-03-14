@@ -32,6 +32,7 @@ var (
 	InvalidDecodedDataLenError = errors.New("tmx: invalid decoded data length")
 	InvalidGIDError            = errors.New("tmx: invalid GID")
 	InvalidPointsFieldError    = errors.New("tmx: invalid points string")
+	InfiniteMapError           = errors.New("tmx: infinite maps are not currently supported")
 )
 
 var (
@@ -62,7 +63,10 @@ func Read(r io.Reader) (*Map, error) {
 		return nil, err
 	}
 
-	log.Debug(m.Properties)
+	if m.Infinite == 1 {
+		log.WithError(InfiniteMapError).Error("Read: map has attribute 'infinite=1', not supported")
+		return nil, InfiniteMapError
+	}
 
 	if err := m.decodeLayers(); err != nil {
 		log.WithError(err).Error("Read: could not decode layers")
@@ -381,6 +385,7 @@ type Map struct {
 	Tilesets     []Tileset     `xml:"tileset"`
 	Layers       []*Layer      `xml:"layer"`
 	ObjectGroups []ObjectGroup `xml:"objectgroup"`
+	Infinite     int           `xml:"infinite,attr"`
 }
 
 // DrawAll will draw all tile layers to the target.  This will use `pixel.Batch`s for efficiency.
