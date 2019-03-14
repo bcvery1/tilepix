@@ -302,7 +302,7 @@ func (l *Layer) decode(width, height int) ([]GID, error) {
 
 func (l *Layer) decodeLayerXML(width, height int) ([]GID, error) {
 	if len(l.Data.DataTiles) != width*height {
-		log.WithError(InvalidDecodedDataLenError).Error("Layer.decodeLayerXML: data length mismatch")
+		log.WithError(InvalidDecodedDataLenError).WithFields(log.Fields{"Length datatiles": len(l.Data.DataTiles), "W*H": width * height}).Error("Layer.decodeLayerXML: data length mismatch")
 		return nil, InvalidDecodedDataLenError
 	}
 
@@ -322,7 +322,7 @@ func (l *Layer) decodeLayerCSV(width, height int) ([]GID, error) {
 	}
 
 	if len(gids) != width*height {
-		log.WithError(InvalidDecodedDataLenError).Error("Layer.decodeLayerCSV: data length mismatch")
+		log.WithError(InvalidDecodedDataLenError).WithFields(log.Fields{"Length GIDSs": len(gids), "W*H": width * height}).Error("Layer.decodeLayerCSV: data length mismatch")
 		return nil, InvalidDecodedDataLenError
 	}
 
@@ -337,7 +337,7 @@ func (l *Layer) decodeLayerBase64(width, height int) ([]GID, error) {
 	}
 
 	if len(dataBytes) != width*height*4 {
-		log.WithError(InvalidDecodedDataLenError).Error("Layer.decodeLayerBase64: data length mismatch")
+		log.WithError(InvalidDecodedDataLenError).WithFields(log.Fields{"Length databytes": len(dataBytes), "W*H": width * height}).Error("Layer.decodeLayerBase64: data length mismatch")
 		return nil, InvalidDecodedDataLenError
 	}
 
