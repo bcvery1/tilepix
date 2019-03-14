@@ -62,6 +62,8 @@ func Read(r io.Reader) (*Map, error) {
 		return nil, err
 	}
 
+	log.Debug(m.Properties)
+
 	if err := m.decodeLayers(); err != nil {
 		log.WithError(err).Error("Read: could not decode layers")
 		return nil, err
