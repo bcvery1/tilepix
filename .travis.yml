@@ -16,11 +16,10 @@ go:
   - tip
   - 1.12
   - 1.11
-  - 1.10
 
 install:
-  - go mod download
+  - env GO111MODULES=on go mod download
 
 script:
-  - go test -i ./...
-  - go test -v -cover -race ./...
+  - env GO111MODULES=on go test -i ./...
+  - env GO111MODULES=on go test -v -cover -race ./...
