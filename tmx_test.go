@@ -1,11 +1,18 @@
 package tilepix_test
 
 import (
+	"io/ioutil"
 	"os"
 	"testing"
 
 	"github.com/bcvery1/tilepix"
+
+	log "github.com/sirupsen/logrus"
 )
+
+func init() {
+	log.SetOutput(ioutil.Discard)
+}
 
 func TestReadFile(t *testing.T) {
 	tests := []struct {
@@ -47,6 +54,12 @@ func TestReadFile(t *testing.T) {
 		{
 			name:     "missing file",
 			filepath: "testdata/foo.tmx",
+			want:     nil,
+			wantErr:  true,
+		},
+		{
+			name:     "map is infinite",
+			filepath: "testdata/infinite.tmx",
 			want:     nil,
 			wantErr:  true,
 		},
