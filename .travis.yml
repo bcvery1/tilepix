@@ -14,15 +14,15 @@ addons:
       - libasound2-dev
 go:
   - tip
-  - 1.12
-  - 1.11
-
-install: true
+  - 1.12.x
+  - 1.11.x
 
 env:
   global:
     - GO111MODULES=on
 
+install: true
+
 script:
-  - go test -i ./...
+  - go test -v ./...
   - go test -v -cover -race ./...
