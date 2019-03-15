@@ -20,7 +20,8 @@ go:
 install: true
 
 env:
-  - GO111MODULES=on
+  global:
+    - GO111MODULES=on
 
 script:
   - go test -i ./...
