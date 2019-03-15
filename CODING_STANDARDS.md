@@ -70,6 +70,28 @@ Use error and multiple return values.
 No function which potentially returns an error should be unassigned.  Where possible check the return value and
 propogate as soon as possible.
 
+### Blank assignments
+Occasionally we have to call a function which returns a potential error, after we have already caught an error.  It is
+only under these circumstances we should assign the return value to `_`.  For example, when work with transations:
+```go
+tx, err := newTransaction()
+if err != nil {
+	return err
+}
+
+if err := tx.PerformTask(1); err != nil {
+	_ = tx.Rollback()
+	return err
+}
+
+if err := tx.PerformTask(2); err != nil {
+	_ = tx.Rollback()
+	return err
+}
+
+return tx.Commit()
+```
+
 ### Deferred checks
 When calling a function which returns an error using defer, also call the function (if possible) explicitally, checking
 the error. Example:
@@ -93,30 +115,37 @@ if err := f.Close(); err != nil {
 return nil
 ```
 
+### Naming
+Any variables holding error messages should be prefixed with `Err`.  Example:
+```go
+var (
+	ErrFooUninitiatlise = errors.New("foo must first be initialised")
+)
+```
+
+Any custom error types should be suffixed with `Error`.  Example:
+```go
+// ParseError is type of error returned when there's a parsing problem.
+type ParseError struct {
+  Line, Col int
+}
+
+func foo() {
+    res, err := somepkgAction()
+    if err != nil {
+        if err == somepkg.ErrBadAction {
+        	// ...
+        }
+        if pe, ok := err.(*ParseError); ok {
+             line, col := pe.Line, pe.Col
+             // ...
+        }
+    }
+}
+```
+
 It should always be safe to call `.Close()` according to the `Closer` interface.  If writing a struct which implements
 `io.Closer`, ensure it is safe to call `Close` multiple times.
-
-### Blank assignments
-Occasionally we have to call a function which returns a potential error, after we have already caught an error.  It is
-only under these circumstances we should assign the return value to `_`.  For example, when work with transations:
-```go
-tx, err := newTransaction()
-if err != nil {
-	return err
-}
-
-if err := tx.PerformTask(1); err != nil {
-	_ = tx.Rollback()
-	return err
-}
-
-if err := tx.PerformTask(2); err != nil {
-	_ = tx.Rollback()
-	return err
-}
-
-return tx.Commit()
-```  
 
 ## Error strings
 Error strings should not be capitalized (unless beginning with proper nouns or acronyms) or end with punctuation, since
