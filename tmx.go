@@ -27,12 +27,12 @@ const (
 
 // Errors which are returned from various places in the package.
 var (
-	UnknownEncodingError       = errors.New("tmx: invalid encoding scheme")
-	UnknownCompressionError    = errors.New("tmx: invalid compression method")
-	InvalidDecodedDataLenError = errors.New("tmx: invalid decoded data length")
-	InvalidGIDError            = errors.New("tmx: invalid GID")
-	InvalidPointsFieldError    = errors.New("tmx: invalid points string")
-	InfiniteMapError           = errors.New("tmx: infinite maps are not currently supported")
+	ErrUnknownEncoding       = errors.New("tmx: invalid encoding scheme")
+	ErrUnknownCompression    = errors.New("tmx: invalid compression method")
+	ErrInvalidDecodedDataLen = errors.New("tmx: invalid decoded data length")
+	ErrInvalidGID            = errors.New("tmx: invalid GID")
+	ErrInvalidPointsField    = errors.New("tmx: invalid points string")
+	ErrInfiniteMap           = errors.New("tmx: infinite maps are not currently supported")
 )
 
 var (
@@ -64,8 +64,8 @@ func Read(r io.Reader) (*Map, error) {
 	}
 
 	if m.Infinite == 1 {
-		log.WithError(InfiniteMapError).Error("Read: map has attribute 'infinite=1', not supported")
-		return nil, InfiniteMapError
+		log.WithError(ErrInfiniteMap).Error("Read: map has attribute 'infinite=1', not supported")
+		return nil, ErrInfiniteMap
 	}
 
 	if err := m.decodeLayers(); err != nil {
@@ -147,8 +147,8 @@ func (d *Data) decodeBase64() (data []byte, err error) {
 
 		comr = encr
 	default:
-		err = UnknownCompressionError
-		log.WithError(UnknownCompressionError).WithField("Compression", d.Compression).Error("decodeBase64: unable to handle this compression type")
+		err = ErrUnknownCompression
+		log.WithError(ErrUnknownCompression).WithField("Compression", d.Compression).Error("decodeBase64: unable to handle this compression type")
 		return
 	}
 
@@ -302,14 +302,14 @@ func (l *Layer) decode(width, height int) ([]GID, error) {
 		return l.decodeLayerXML(width, height)
 	}
 
-	log.WithError(UnknownEncodingError).Error("Layer.decode: unrecognised encoding")
-	return nil, UnknownEncodingError
+	log.WithError(ErrUnknownEncoding).Error("Layer.decode: unrecognised encoding")
+	return nil, ErrUnknownEncoding
 }
 
 func (l *Layer) decodeLayerXML(width, height int) ([]GID, error) {
 	if len(l.Data.DataTiles) != width*height {
-		log.WithError(InvalidDecodedDataLenError).WithFields(log.Fields{"Length datatiles": len(l.Data.DataTiles), "W*H": width * height}).Error("Layer.decodeLayerXML: data length mismatch")
-		return nil, InvalidDecodedDataLenError
+		log.WithError(ErrInvalidDecodedDataLen).WithFields(log.Fields{"Length datatiles": len(l.Data.DataTiles), "W*H": width * height}).Error("Layer.decodeLayerXML: data length mismatch")
+		return nil, ErrInvalidDecodedDataLen
 	}
 
 	gids := make([]GID, len(l.Data.DataTiles))
@@ -328,8 +328,8 @@ func (l *Layer) decodeLayerCSV(width, height int) ([]GID, error) {
 	}
 
 	if len(gids) != width*height {
-		log.WithError(InvalidDecodedDataLenError).WithFields(log.Fields{"Length GIDSs": len(gids), "W*H": width * height}).Error("Layer.decodeLayerCSV: data length mismatch")
-		return nil, InvalidDecodedDataLenError
+		log.WithError(ErrInvalidDecodedDataLen).WithFields(log.Fields{"Length GIDSs": len(gids), "W*H": width * height}).Error("Layer.decodeLayerCSV: data length mismatch")
+		return nil, ErrInvalidDecodedDataLen
 	}
 
 	return gids, nil
@@ -343,8 +343,8 @@ func (l *Layer) decodeLayerBase64(width, height int) ([]GID, error) {
 	}
 
 	if len(dataBytes) != width*height*4 {
-		log.WithError(InvalidDecodedDataLenError).WithFields(log.Fields{"Length databytes": len(dataBytes), "W*H": width * height}).Error("Layer.decodeLayerBase64: data length mismatch")
-		return nil, InvalidDecodedDataLenError
+		log.WithError(ErrInvalidDecodedDataLen).WithFields(log.Fields{"Length databytes": len(dataBytes), "W*H": width * height}).Error("Layer.decodeLayerBase64: data length mismatch")
+		return nil, ErrInvalidDecodedDataLen
 	}
 
 	gids := make([]GID, width*height)
@@ -420,8 +420,8 @@ func (m *Map) decodeGID(gid GID) (*DecodedTile, error) {
 		}
 	}
 
-	log.WithError(InvalidGIDError).Error("Map.decodeGID: GID is invalid")
-	return nil, InvalidGIDError
+	log.WithError(ErrInvalidGID).Error("Map.decodeGID: GID is invalid")
+	return nil, ErrInvalidGID
 }
 
 func (m *Map) decodeLayers() error {
@@ -512,8 +512,8 @@ func decodePoints(s string) (points []Point, err error) {
 	for i, pointString := range pointStrings {
 		coordStrings := strings.Split(pointString, ",")
 		if len(coordStrings) != 2 {
-			log.WithError(InvalidPointsFieldError).WithField("Co-ordinate strings", coordStrings).Error("decodePoints: mismatch co-ordinates string length")
-			return nil, InvalidPointsFieldError
+			log.WithError(ErrInvalidPointsField).WithField("Co-ordinate strings", coordStrings).Error("decodePoints: mismatch co-ordinates string length")
+			return nil, ErrInvalidPointsField
 		}
 
 		points[i].X, err = strconv.Atoi(coordStrings[0])
