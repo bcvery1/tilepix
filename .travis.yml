@@ -17,9 +17,11 @@ go:
   - 1.12
   - 1.11
 
-install:
-  - env GO111MODULES=on go mod download
+install: true
+
+env:
+  - GO111MODULES=on
 
 script:
-  - env GO111MODULES=on go test -i ./...
-  - env GO111MODULES=on go test -v -cover -race ./...
+  - go test -i ./...
+  - go test -v -cover -race ./...
