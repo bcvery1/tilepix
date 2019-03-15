@@ -19,7 +19,7 @@ go:
 
 env:
   global:
-    - GO111MODULES=on
+    - GO111MODULE=on
 
 install: true
 
