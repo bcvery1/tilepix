@@ -14,9 +14,8 @@ import (
 	"strconv"
 	"strings"
 
-	"github.com/faiface/pixel/pixelgl"
-
 	"github.com/faiface/pixel"
+	"github.com/faiface/pixel/pixelgl"
 
 	log "github.com/sirupsen/logrus"
 )
