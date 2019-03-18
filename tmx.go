@@ -229,12 +229,12 @@ func (i *Image) initSprite() error {
 */
 
 type ImageLayer struct {
+	Locked  bool    `xml:"locked,attr"`
 	Name    string  `xml:"name,attr"`
+	OffSetX float64 `xml:"offsetx,attr"`
+	OffSetY float64 `xml:"offsety,attr"`
+	Opacity float64 `xml:"opacity,attr"`
 	Image   *Image  `xml:"image"`
-	Locked  bool    `xml:"locked"`
-	Opacity float64 `xml:"opacity"`
-	OffSetX float64 `xml:"offsetx"`
-	OffSetY float64 `xml:"offsety"`
 }
 
 func (im *ImageLayer) Draw(target pixel.Target, mat pixel.Matrix) error {
