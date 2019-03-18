@@ -199,6 +199,23 @@ type Image struct {
 }
 
 /*
+  ___                     _
+ |_ _|_ __  __ _ __ _ ___| |   __ _ _  _ ___ _ _
+  | || '  \/ _` / _` / -_) |__/ _` | || / -_) '_|
+ |___|_|_|_\__,_\__, \___|____\__,_|\_, \___|_|
+                |___/               |__/
+*/
+
+type ImageLayer struct {
+	Name    string  `xml:"name,attr"`
+	Image   Image   `xml:"image"`
+	Locked  bool    `xml:"locked"`
+	Opacity float64 `xml:"opacity"`
+	OffSetX float64 `xml:"offsetx"`
+	OffSetY float64 `xml:"offsety"`
+}
+
+/*
   _
  | |   __ _ _  _ ___ _ _
  | |__/ _` | || / -_) '_|
@@ -386,6 +403,7 @@ type Map struct {
 	Layers       []*Layer      `xml:"layer"`
 	ObjectGroups []ObjectGroup `xml:"objectgroup"`
 	Infinite     int           `xml:"infinite,attr"`
+	ImageLayers  []ImageLayer  `xml:"imagelayer"`
 }
 
 // DrawAll will draw all tile layers to the target.  This will use `pixel.Batch`s for efficiency.
