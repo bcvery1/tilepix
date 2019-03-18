@@ -7,11 +7,14 @@ import (
 	"encoding/base64"
 	"encoding/xml"
 	"errors"
+	"image/color"
 	"io"
 	"io/ioutil"
 	"os"
 	"strconv"
 	"strings"
+
+	"github.com/faiface/pixel/pixelgl"
 
 	"github.com/faiface/pixel"
 
@@ -198,6 +201,26 @@ type Image struct {
 	picture pixel.Picture
 }
 
+func (i *Image) initSprite() error {
+	if i.sprite != nil {
+		return nil
+	}
+
+	log.WithFields(log.Fields{"Path": i.Source, "Width": i.Width, "Height": i.Height}).Debug("Image.initSprite: loading sprite")
+
+	// TODO(need to do this either by file or reader)
+	sprite, pictureData, err := loadSpriteFromFile(i.Source)
+	if err != nil {
+		log.WithError(err).Error("Image.initSprite: could not load sprite from file")
+		return err
+	}
+
+	i.sprite = sprite
+	i.picture = pictureData
+
+	return nil
+}
+
 /*
   ___                     _
  |_ _|_ __  __ _ __ _ ___| |   __ _ _  _ ___ _ _
@@ -208,11 +231,24 @@ type Image struct {
 
 type ImageLayer struct {
 	Name    string  `xml:"name,attr"`
-	Image   Image   `xml:"image"`
+	Image   *Image  `xml:"image"`
 	Locked  bool    `xml:"locked"`
 	Opacity float64 `xml:"opacity"`
 	OffSetX float64 `xml:"offsetx"`
 	OffSetY float64 `xml:"offsety"`
+}
+
+func (im *ImageLayer) Draw(target pixel.Target, mat pixel.Matrix) error {
+	if err := im.Image.initSprite(); err != nil {
+		log.WithError(err).Error("ImageLayer.Draw: could not initialise image sprite")
+		return err
+	}
+
+	// Shift image right-down by half its' dimensions.
+	mat = mat.Moved(pixel.V(float64(im.Image.Width/2), float64(im.Image.Height/-2)))
+
+	im.Image.sprite.Draw(target, mat)
+	return nil
 }
 
 /*
@@ -392,30 +428,61 @@ func (l *Layer) decodeLayerBase64(width, height int) ([]GID, error) {
 
 // Map is a TMX file structure representing the map as a whole.
 type Map struct {
-	Version      string        `xml:"title,attr"`
-	Orientation  string        `xml:"orientation,attr"`
-	Width        int           `xml:"width,attr"`
-	Height       int           `xml:"height,attr"`
-	TileWidth    int           `xml:"tilewidth,attr"`
-	TileHeight   int           `xml:"tileheight,attr"`
-	Properties   []Property    `xml:"properties>property"`
-	Tilesets     []Tileset     `xml:"tileset"`
-	Layers       []*Layer      `xml:"layer"`
-	ObjectGroups []ObjectGroup `xml:"objectgroup"`
-	Infinite     int           `xml:"infinite,attr"`
-	ImageLayers  []ImageLayer  `xml:"imagelayer"`
+	Version     string `xml:"title,attr"`
+	Orientation string `xml:"orientation,attr"`
+	// Width is the number of tiles - not the width in pixels
+	Width int `xml:"width,attr"`
+	// Height is the number of tiles - not the height in pixels
+	Height       int            `xml:"height,attr"`
+	TileWidth    int            `xml:"tilewidth,attr"`
+	TileHeight   int            `xml:"tileheight,attr"`
+	Properties   []*Property    `xml:"properties>property"`
+	Tilesets     []*Tileset     `xml:"tileset"`
+	Layers       []*Layer       `xml:"layer"`
+	ObjectGroups []*ObjectGroup `xml:"objectgroup"`
+	Infinite     int            `xml:"infinite,attr"`
+	ImageLayers  []*ImageLayer  `xml:"imagelayer"`
+
+	canvas *pixelgl.Canvas
 }
 
 // DrawAll will draw all tile layers to the target.  This will use `pixel.Batch`s for efficiency.
-func (m *Map) DrawAll(target pixel.Target) error {
+func (m *Map) DrawAll(target pixel.Target, clearColour color.Color) error {
+	if m.canvas == nil {
+		m.canvas = pixelgl.NewCanvas(m.bounds())
+	}
+	m.canvas.Clear(clearColour)
+
 	for _, l := range m.Layers {
-		if err := l.Draw(target); err != nil {
+		if err := l.Draw(m.canvas); err != nil {
 			log.WithError(err).Error("Map.DrawAll: could not draw layer")
 			return err
 		}
 	}
 
+	for _, il := range m.ImageLayers {
+		// The matrix shift is because images are drawn from the top-left in Tiled.
+		if err := il.Draw(m.canvas, pixel.IM.Moved(pixel.V(0, m.pixelHeight()))); err != nil {
+			log.WithError(err).Error("Map.DrawAll: could not draw image layer")
+			return err
+		}
+	}
+
+	m.canvas.Draw(target, pixel.IM)
+
 	return nil
+}
+
+// bounds will return a pixel rectangle representing the width-height in pixels.
+func (m *Map) bounds() pixel.Rect {
+	return pixel.R(0, 0, m.pixelWidth(), m.pixelHeight())
+}
+
+func (m *Map) pixelWidth() float64 {
+	return float64(m.Width * m.TileWidth)
+}
+func (m *Map) pixelHeight() float64 {
+	return float64(m.Height * m.TileHeight)
 }
 
 func (m *Map) decodeGID(gid GID) (*DecodedTile, error) {
@@ -429,7 +496,7 @@ func (m *Map) decodeGID(gid GID) (*DecodedTile, error) {
 		if m.Tilesets[i].FirstGID <= gidBare {
 			return &DecodedTile{
 				ID:             ID(gidBare - m.Tilesets[i].FirstGID),
-				Tileset:        &m.Tilesets[i],
+				Tileset:        m.Tilesets[i],
 				HorizontalFlip: gid&gidHorizontalFlip != 0,
 				VerticalFlip:   gid&gidVerticalFlip != 0,
 				DiagonalFlip:   gid&gidDiagonalFlip != 0,
@@ -608,8 +675,8 @@ type Property struct {
 
 // Tile is a TMX file structure which holds a Tiled tile.
 type Tile struct {
-	ID    ID    `xml:"id,attr"`
-	Image Image `xml:"image"`
+	ID    ID     `xml:"id,attr"`
+	Image *Image `xml:"image"`
 }
 
 // DecodedTile is a convenience struct, which stores the decoded data from a Tile.
@@ -645,7 +712,7 @@ type Tileset struct {
 	Spacing    int        `xml:"spacing,attr"`
 	Margin     int        `xml:"margin,attr"`
 	Properties []Property `xml:"properties>property"`
-	Image      Image      `xml:"image"`
+	Image      *Image     `xml:"image"`
 	Tiles      []Tile     `xml:"tile"`
 	Tilecount  int        `xml:"tilecount,attr"`
 	Columns    int        `xml:"columns,attr"`
