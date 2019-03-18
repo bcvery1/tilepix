@@ -1,11 +1,3 @@
----
-name: Pull request
-about: Contribute towards the project
-title: ''
-assignees: bcvery1
-
----
-
 **Checklist**
 Ensure all of these are completed before opening the PR:
  - [ ] Run `goimports`
