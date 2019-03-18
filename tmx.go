@@ -228,6 +228,7 @@ func (i *Image) initSprite() error {
                 |___/               |__/
 */
 
+// ImageLayer is a TMX file structure which references an image layer, with associated properties.
 type ImageLayer struct {
 	Locked  bool    `xml:"locked,attr"`
 	Name    string  `xml:"name,attr"`
@@ -237,6 +238,7 @@ type ImageLayer struct {
 	Image   *Image  `xml:"image"`
 }
 
+// Draw will draw the image layer to the target provided, shifted with the provided matrix.
 func (im *ImageLayer) Draw(target pixel.Target, mat pixel.Matrix) error {
 	if err := im.Image.initSprite(); err != nil {
 		log.WithError(err).Error("ImageLayer.Draw: could not initialise image sprite")
