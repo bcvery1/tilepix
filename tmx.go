@@ -445,8 +445,14 @@ type Map struct {
 	canvas *pixelgl.Canvas
 }
 
-// DrawAll will draw all tile layers to the target.  This will use `pixel.Batch`s for efficiency.
-func (m *Map) DrawAll(target pixel.Target, clearColour color.Color) error {
+// DrawAll will draw all tile layers and image layers to the target.
+// Tile layers are first draw to their own `pixel.Batch`s for efficiency.
+// All layers are drawn to a `pixel.Canvas` before being drawn to the target.
+//
+// - target - The target to draw layers to.
+// - clearColour - The colour to clear the maps' canvas before drawing.
+// - mat - The matrix to draw the canvas to the target with.
+func (m *Map) DrawAll(target pixel.Target, clearColour color.Color, mat pixel.Matrix) error {
 	if m.canvas == nil {
 		m.canvas = pixelgl.NewCanvas(m.bounds())
 	}
@@ -467,7 +473,7 @@ func (m *Map) DrawAll(target pixel.Target, clearColour color.Color) error {
 		}
 	}
 
-	m.canvas.Draw(target, pixel.IM)
+	m.canvas.Draw(target, mat)
 
 	return nil
 }
