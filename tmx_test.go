@@ -78,19 +78,21 @@ func TestReadFile(t *testing.T) {
 	}
 }
 
-func TestProperties(t *testing.T) {
-	t.Log("Reading", "testdata/poly.tmx")
-
+func readFromFile(t *testing.T, filename string) (*tilepix.Map, error) {
+	t.Log("Reading", filename)
 	r, err := os.Open("testdata/poly.tmx")
 	if err != nil {
 		t.Fatal(err)
 	}
+	defer r.Close()
+	return tilepix.Read(r)
+}
 
-	m, err := tilepix.Read(r)
+func TestProperties(t *testing.T) {
+	m, err := tilepix.ReadFile("testdata/poly.tmx")
 	if err != nil {
 		t.Fatal(err)
 	}
-
 	for _, group := range m.ObjectGroups {
 		for _, object := range group.Objects {
 			if object.Properties[0].Name != "foo" {
@@ -99,6 +101,27 @@ func TestProperties(t *testing.T) {
 			return
 		}
 	}
-
 	t.Fatal("No property found")
+}
+
+func TestGetLayerByName(t *testing.T) {
+	m, err := tilepix.ReadFile("testdata/poly.tmx")
+	if err != nil {
+		t.Fatal(err)
+	}
+	layer := m.GetLayerByName("Tile Layer 1")
+	if layer.Name != "Tile Layer 1" {
+		t.Error("error get layer")
+	}
+}
+
+func TestGetObjectLayerByName(t *testing.T) {
+	m, err := tilepix.ReadFile("testdata/poly.tmx")
+	if err != nil {
+		t.Fatal(err)
+	}
+	layer := m.GetObjectLayerByName("Object Layer 1")
+	if layer.Name != "Object Layer 1" {
+		t.Error("error get object layer")
+	}
 }
