@@ -16,7 +16,6 @@ import (
 
 	"github.com/faiface/pixel"
 	"github.com/faiface/pixel/pixelgl"
-
 	log "github.com/sirupsen/logrus"
 )
 
@@ -65,8 +64,8 @@ func Read(r io.Reader) (*Map, error) {
 		return nil, err
 	}
 
-	if m.Infinite == 1 {
-		log.WithError(ErrInfiniteMap).Error("Read: map has attribute 'infinite=1', not supported")
+	if m.Infinite {
+		log.WithError(ErrInfiniteMap).Error("Read: map has attribute 'infinite=true', not supported")
 		return nil, ErrInfiniteMap
 	}
 
@@ -441,7 +440,7 @@ type Map struct {
 	Tilesets     []*Tileset     `xml:"tileset"`
 	Layers       []*Layer       `xml:"layer"`
 	ObjectGroups []*ObjectGroup `xml:"objectgroup"`
-	Infinite     int            `xml:"infinite,attr"`
+	Infinite     bool           `xml:"infinite,attr"`
 	ImageLayers  []*ImageLayer  `xml:"imagelayer"`
 
 	canvas *pixelgl.Canvas
