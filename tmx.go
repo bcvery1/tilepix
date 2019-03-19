@@ -622,6 +622,15 @@ func decodePoints(s string) (points []Point, err error) {
 	return
 }
 
+func (m *Map) GetLayerByName(name string) *Layer {
+	for _, l := range m.Layers {
+		if l.Name == name {
+			return l
+		}
+	}
+	return nil
+}
+
 /*
   ___     _
  | _ \___| |_  _ __ _ ___ _ _
