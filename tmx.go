@@ -622,8 +622,29 @@ func decodePoints(s string) (points []Point, err error) {
 	return
 }
 
+// GetLayerByName returns a Map's Layer by its name
 func (m *Map) GetLayerByName(name string) *Layer {
 	for _, l := range m.Layers {
+		if l.Name == name {
+			return l
+		}
+	}
+	return nil
+}
+
+// GetImageLayerByName returns a Map's ImageLayer by its name
+func (m *Map) GetImageLayerByName(name string) *ImageLayer {
+	for _, l := range m.ImageLayers {
+		if l.Name == name {
+			return l
+		}
+	}
+	return nil
+}
+
+// GetObjectLayerByName returns a Map's ObjectGroup by its name
+func (m *Map) GetObjectLayerByName(name string) *ObjectGroup {
+	for _, l := range m.ObjectGroups {
 		if l.Name == name {
 			return l
 		}
