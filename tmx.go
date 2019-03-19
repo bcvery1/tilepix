@@ -16,7 +16,6 @@ import (
 
 	"github.com/faiface/pixel"
 	"github.com/faiface/pixel/pixelgl"
-
 	log "github.com/sirupsen/logrus"
 )
 
@@ -65,7 +64,7 @@ func Read(r io.Reader) (*Map, error) {
 		return nil, err
 	}
 
-	if m.Infinite == true {
+	if m.Infinite {
 		log.WithError(ErrInfiniteMap).Error("Read: map has attribute 'infinite=true', not supported")
 		return nil, ErrInfiniteMap
 	}
