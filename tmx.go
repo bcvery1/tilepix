@@ -565,6 +565,7 @@ func (m *Map) decodeGID(gid GID) (*DecodedTile, error) {
 }
 
 func (m *Map) decodeLayers() error {
+	// Decode tile layers
 	for _, l := range m.Layers {
 		gids, err := l.decode(m.Width, m.Height)
 		if err != nil {
@@ -580,6 +581,14 @@ func (m *Map) decodeLayers() error {
 				return err
 			}
 			l.DecodedTiles[j] = decTile
+		}
+	}
+
+	// Decode object layers
+	for _, og := range m.ObjectGroups {
+		if err := og.decode(); err != nil {
+			log.WithError(err).Error("Map.decodeLayers: could not decode Object Group")
+			return err
 		}
 	}
 
@@ -682,6 +691,14 @@ type ObjectGroup struct {
 
 	// parentMap is the map which contains this object
 	parentMap *Map
+}
+
+func (og *ObjectGroup) decode() error {
+	for _, o := range og.Objects {
+		o.hydrateType()
+	}
+
+	return nil
 }
 
 func (og *ObjectGroup) setParent(m *Map) {
