@@ -75,8 +75,6 @@ func Read(r io.Reader) (*Map, error) {
 		return nil, err
 	}
 
-	m.setParents()
-
 	if m.Infinite {
 		log.WithError(ErrInfiniteMap).Error("Read: map has attribute 'infinite=true', not supported")
 		return nil, ErrInfiniteMap
@@ -86,6 +84,8 @@ func Read(r io.Reader) (*Map, error) {
 		log.WithError(err).Error("Read: could not decode layers")
 		return nil, err
 	}
+
+	m.setParents()
 
 	log.WithField("Layer count", len(m.Layers)).Debug("Read processing layer tilesets")
 	for _, l := range m.Layers {
@@ -371,7 +371,8 @@ func (l *Layer) Draw(target pixel.Target) error {
 		fY := iY + float64(ts.TileHeight)
 
 		l.Tileset.sprite.Set(l.Tileset.sprite.Picture(), pixel.R(iX, iY, fX, fY))
-		pos := gamePos.ScaledXY(pixel.V(float64(ts.TileWidth), float64(ts.TileHeight)))
+		// The following added vector is magic numbers - requires proper investigation as to why they work!
+		pos := gamePos.ScaledXY(pixel.V(float64(ts.TileWidth), float64(ts.TileHeight))).Add(pixel.V(float64(ts.TileWidth)*1.5, float64(ts.TileHeight)*-.5))
 		l.Tileset.sprite.Draw(l.batch, pixel.IM.Moved(pos))
 	}
 
@@ -607,6 +608,9 @@ func (m *Map) setParents() {
 	}
 	for _, im := range m.ImageLayers {
 		im.setParent(m)
+	}
+	for _, l := range m.Layers {
+		l.setParent(m)
 	}
 }
 
