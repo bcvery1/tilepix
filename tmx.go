@@ -26,6 +26,17 @@ const (
 	gidFlip           = gidHorizontalFlip | gidVerticalFlip | gidDiagonalFlip
 )
 
+// ObjectType is used to represent the types an object can be.
+type ObjectType int
+
+const (
+	EllipseObj ObjectType = iota
+	PolygonObj
+	PolylineObj
+	RectangleObj
+	PointObj
+)
+
 // Errors which are returned from various places in the package.
 var (
 	ErrUnknownEncoding       = errors.New("tmx: invalid encoding scheme")
@@ -64,6 +75,8 @@ func Read(r io.Reader) (*Map, error) {
 		return nil, err
 	}
 
+	m.setParents()
+
 	if m.Infinite {
 		log.WithError(ErrInfiniteMap).Error("Read: map has attribute 'infinite=true', not supported")
 		return nil, ErrInfiniteMap
@@ -75,10 +88,7 @@ func Read(r io.Reader) (*Map, error) {
 	}
 
 	log.WithField("Layer count", len(m.Layers)).Debug("Read processing layer tilesets")
-	for i := 0; i < len(m.Layers); i++ {
-		l := m.Layers[i]
-		l.mapParent = m
-
+	for _, l := range m.Layers {
 		tileset, isEmpty, usesMultipleTilesets := getTileset(l)
 		if usesMultipleTilesets {
 			log.Debug("Read: multiple tilesets in use")
@@ -118,7 +128,10 @@ type Data struct {
 	Compression string `xml:"compression,attr"`
 	RawData     []byte `xml:",innerxml"`
 	// DataTiles is only used when layer encoding is XML.
-	DataTiles []DataTile `xml:"tile"`
+	DataTiles []*DataTile `xml:"tile"`
+
+	// parentMap is the map which contains this object
+	parentMap *Map
 }
 
 func (d *Data) decodeBase64() (data []byte, err error) {
@@ -180,6 +193,10 @@ func (d *Data) decodeCSV() ([]GID, error) {
 	return gids, nil
 }
 
+func (d *Data) setParent(m *Map) {
+	d.parentMap = m
+}
+
 /*
   ___
  |_ _|_ __  __ _ __ _ ___
@@ -197,6 +214,9 @@ type Image struct {
 
 	sprite  *pixel.Sprite
 	picture pixel.Picture
+
+	// parentMap is the map which contains this object
+	parentMap *Map
 }
 
 func (i *Image) initSprite() error {
@@ -219,6 +239,10 @@ func (i *Image) initSprite() error {
 	return nil
 }
 
+func (i *Image) setParent(m *Map) {
+	i.parentMap = m
+}
+
 /*
   ___                     _
  |_ _|_ __  __ _ __ _ ___| |   __ _ _  _ ___ _ _
@@ -235,6 +259,9 @@ type ImageLayer struct {
 	OffSetY float64 `xml:"offsety,attr"`
 	Opacity float64 `xml:"opacity,attr"`
 	Image   *Image  `xml:"image"`
+
+	// parentMap is the map which contains this object
+	parentMap *Map
 }
 
 // Draw will draw the image layer to the target provided, shifted with the provided matrix.
@@ -251,6 +278,14 @@ func (im *ImageLayer) Draw(target pixel.Target, mat pixel.Matrix) error {
 	return nil
 }
 
+func (im *ImageLayer) setParent(m *Map) {
+	im.parentMap = m
+
+	if im.Image != nil {
+		im.Image.setParent(m)
+	}
+}
+
 /*
   _
  | |   __ _ _  _ ___ _ _
@@ -261,11 +296,11 @@ func (im *ImageLayer) Draw(target pixel.Target, mat pixel.Matrix) error {
 
 // Layer is a TMX file structure which can hold any type of Tiled layer.
 type Layer struct {
-	Name       string     `xml:"name,attr"`
-	Opacity    float32    `xml:"opacity,attr"`
-	Visible    bool       `xml:"visible,attr"`
-	Properties []Property `xml:"properties>property"`
-	Data       Data       `xml:"data"`
+	Name       string      `xml:"name,attr"`
+	Opacity    float32     `xml:"opacity,attr"`
+	Visible    bool        `xml:"visible,attr"`
+	Properties []*Property `xml:"properties>property"`
+	Data       Data        `xml:"data"`
 	// DecodedTiles is the attribute you should use instead of `Data`.
 	// Tile entry at (x,y) is obtained using l.DecodedTiles[y*map.Width+x].
 	DecodedTiles []*DecodedTile
@@ -274,8 +309,10 @@ type Layer struct {
 	// Empty should be set when all entries of the layer are NilTile.
 	Empty bool
 
-	batch     *pixel.Batch
-	mapParent *Map
+	batch *pixel.Batch
+
+	// parentMap is the map which contains this object
+	parentMap *Map
 }
 
 // Batch returns the batch with the picture data from the tileset associated with this layer.
@@ -326,7 +363,7 @@ func (l *Layer) Draw(target pixel.Target) error {
 
 		// Calculate the framing for the tile within its tileset's source image
 		x, y := tileIDToCoord(tID, ts.Columns, numRows)
-		gamePos := indexToGamePos(tileIndex, l.mapParent.Width, l.mapParent.Height)
+		gamePos := indexToGamePos(tileIndex, l.parentMap.Width, l.parentMap.Height)
 
 		iX := float64(x) * float64(ts.TileWidth)
 		fX := iX + float64(ts.TileWidth)
@@ -416,6 +453,18 @@ func (l *Layer) decodeLayerBase64(width, height int) ([]GID, error) {
 	}
 
 	return gids, nil
+}
+
+func (l *Layer) setParent(m *Map) {
+	l.parentMap = m
+
+	for _, p := range l.Properties {
+		p.setParent(m)
+	}
+
+	if l.Tileset != nil {
+		l.Tileset.setParent(m)
+	}
 }
 
 /*
@@ -537,6 +586,21 @@ func (m *Map) decodeLayers() error {
 	return nil
 }
 
+func (m *Map) setParents() {
+	for _, p := range m.Properties {
+		p.setParent(m)
+	}
+	for _, t := range m.Tilesets {
+		t.setParent(m)
+	}
+	for _, og := range m.ObjectGroups {
+		og.setParent(m)
+	}
+	for _, im := range m.ImageLayers {
+		im.setParent(m)
+	}
+}
+
 /*
    ___  _     _        _
   / _ \| |__ (_)___ __| |_
@@ -547,17 +611,56 @@ func (m *Map) decodeLayers() error {
 
 // Object is a TMX file struture holding a specific Tiled object.
 type Object struct {
-	Name       string     `xml:"name,attr"`
-	Type       string     `xml:"type,attr"`
-	X          float64    `xml:"x,attr"`
-	Y          float64    `xml:"y,attr"`
-	Width      float64    `xml:"width,attr"`
-	Height     float64    `xml:"height,attr"`
-	GID        int        `xml:"gid,attr"`
-	Visible    bool       `xml:"visible,attr"`
-	Polygons   []Polygon  `xml:"polygon"`
-	PolyLines  []PolyLine `xml:"polyline"`
-	Properties []Property `xml:"properties>property"`
+	Name       string      `xml:"name,attr"`
+	Type       string      `xml:"type,attr"`
+	X          float64     `xml:"x,attr"`
+	Y          float64     `xml:"y,attr"`
+	Width      float64     `xml:"width,attr"`
+	Height     float64     `xml:"height,attr"`
+	GID        int         `xml:"id,attr"`
+	Visible    bool        `xml:"visible,attr"`
+	Polygon    *Polygon    `xml:"polygon"`
+	PolyLine   *PolyLine   `xml:"polyline"`
+	Properties []*Property `xml:"properties>property"`
+	Ellipse    *struct{}   `xml:"ellipse"`
+	Point      *struct{}   `xml:"point"`
+
+	objectType ObjectType
+
+	// parentMap is the map which contains this object
+	parentMap *Map
+}
+
+// hydrateType will work out what type this object is.
+func (o *Object) hydrateType() {
+	if o.Polygon != nil {
+		o.objectType = PolygonObj
+		return
+	}
+
+	if o.PolyLine != nil {
+		o.objectType = PolylineObj
+		return
+	}
+
+	if o.Ellipse != nil {
+		o.objectType = EllipseObj
+		return
+	}
+}
+
+func (o *Object) setParent(m *Map) {
+	o.parentMap = m
+
+	if o.Polygon != nil {
+		o.Polygon.setParent(m)
+	}
+	if o.PolyLine != nil {
+		o.PolyLine.setParent(m)
+	}
+	for _, p := range o.Properties {
+		p.setParent(m)
+	}
 }
 
 /*
@@ -570,12 +673,26 @@ type Object struct {
 
 // ObjectGroup is a TMX file structure holding a Tiled ObjectGroup.
 type ObjectGroup struct {
-	Name       string     `xml:"name,attr"`
-	Color      string     `xml:"color,attr"`
-	Opacity    float32    `xml:"opacity,attr"`
-	Visible    bool       `xml:"visible,attr"`
-	Properties []Property `xml:"properties>property"`
-	Objects    []Object   `xml:"object"`
+	Name       string      `xml:"name,attr"`
+	Color      string      `xml:"color,attr"`
+	Opacity    float32     `xml:"opacity,attr"`
+	Visible    bool        `xml:"visible,attr"`
+	Properties []*Property `xml:"properties>property"`
+	Objects    []*Object   `xml:"object"`
+
+	// parentMap is the map which contains this object
+	parentMap *Map
+}
+
+func (og *ObjectGroup) setParent(m *Map) {
+	og.parentMap = m
+
+	for _, p := range og.Properties {
+		p.setParent(m)
+	}
+	for _, o := range og.Objects {
+		o.setParent(m)
+	}
 }
 
 /*
@@ -589,6 +706,9 @@ type ObjectGroup struct {
 type Point struct {
 	X int
 	Y int
+
+	// parentMap is the map which contains this object
+	parentMap *Map
 }
 
 // V converts the Tiled Point to a Pixel Vector.
@@ -596,10 +716,14 @@ func (p *Point) V() pixel.Vec {
 	return pixel.V(float64(p.X), float64(p.Y))
 }
 
-func decodePoints(s string) (points []Point, err error) {
+func (p *Point) setParent(m *Map) {
+	p.parentMap = m
+}
+
+func decodePoints(s string) (points []*Point, err error) {
 	pointStrings := strings.Split(s, " ")
 
-	points = make([]Point, len(pointStrings))
+	points = make([]*Point, len(pointStrings))
 	for i, pointString := range pointStrings {
 		coordStrings := strings.Split(pointString, ",")
 		if len(coordStrings) != 2 {
@@ -663,11 +787,24 @@ func (m *Map) GetObjectLayerByName(name string) *ObjectGroup {
 // Polygon is a TMX file structure representing a Tiled Polygon.
 type Polygon struct {
 	Points string `xml:"points,attr"`
+
+	decodedPoints []*Point
+
+	// parentMap is the map which contains this object
+	parentMap *Map
 }
 
 // Decode will return a slice of points which make up this polygon.
-func (p *Polygon) Decode() ([]Point, error) {
+func (p *Polygon) Decode() ([]*Point, error) {
 	return decodePoints(p.Points)
+}
+
+func (p *Polygon) setParent(m *Map) {
+	p.parentMap = m
+
+	for _, dp := range p.decodedPoints {
+		dp.setParent(m)
+	}
 }
 
 /*
@@ -681,11 +818,24 @@ func (p *Polygon) Decode() ([]Point, error) {
 // PolyLine is a TMX file structure representing a Tiled Polyline.
 type PolyLine struct {
 	Points string `xml:"points,attr"`
+
+	decodedPoints []*Point
+
+	// parentMap is the map which contains this object
+	parentMap *Map
 }
 
 // Decode will return a slice of points which make up this polyline.
-func (p *PolyLine) Decode() ([]Point, error) {
+func (p *PolyLine) Decode() ([]*Point, error) {
 	return decodePoints(p.Points)
+}
+
+func (p *PolyLine) setParent(m *Map) {
+	p.parentMap = m
+
+	for _, dp := range p.decodedPoints {
+		dp.setParent(m)
+	}
 }
 
 /*
@@ -700,6 +850,13 @@ func (p *PolyLine) Decode() ([]Point, error) {
 type Property struct {
 	Name  string `xml:"name,attr"`
 	Value string `xml:"value,attr"`
+
+	// parentMap is the map which contains this object
+	parentMap *Map
+}
+
+func (p *Property) setParent(m *Map) {
+	p.parentMap = m
 }
 
 /*
@@ -713,6 +870,17 @@ type Property struct {
 type Tile struct {
 	ID    ID     `xml:"id,attr"`
 	Image *Image `xml:"image"`
+
+	// parentMap is the map which contains this object
+	parentMap *Map
+}
+
+func (t *Tile) setParent(m *Map) {
+	t.parentMap = m
+
+	if t.Image != nil {
+		t.Image.setParent(m)
+	}
 }
 
 // DecodedTile is a convenience struct, which stores the decoded data from a Tile.
@@ -740,20 +908,38 @@ func (t *DecodedTile) IsNil() bool {
 
 // Tileset is a TMX file structure which represents a Tiled Tileset
 type Tileset struct {
-	FirstGID   GID        `xml:"firstgid,attr"`
-	Source     string     `xml:"source,attr"`
-	Name       string     `xml:"name,attr"`
-	TileWidth  int        `xml:"tilewidth,attr"`
-	TileHeight int        `xml:"tileheight,attr"`
-	Spacing    int        `xml:"spacing,attr"`
-	Margin     int        `xml:"margin,attr"`
-	Properties []Property `xml:"properties>property"`
-	Image      *Image     `xml:"image"`
-	Tiles      []Tile     `xml:"tile"`
-	Tilecount  int        `xml:"tilecount,attr"`
-	Columns    int        `xml:"columns,attr"`
+	FirstGID   GID         `xml:"firstgid,attr"`
+	Source     string      `xml:"source,attr"`
+	Name       string      `xml:"name,attr"`
+	TileWidth  int         `xml:"tilewidth,attr"`
+	TileHeight int         `xml:"tileheight,attr"`
+	Spacing    int         `xml:"spacing,attr"`
+	Margin     int         `xml:"margin,attr"`
+	Properties []*Property `xml:"properties>property"`
+	Image      *Image      `xml:"image"`
+	Tiles      []*Tile     `xml:"tile"`
+	Tilecount  int         `xml:"tilecount,attr"`
+	Columns    int         `xml:"columns,attr"`
 
 	sprite *pixel.Sprite
+
+	// parentMap is the map which contains this object
+	parentMap *Map
+}
+
+func (ts *Tileset) setParent(m *Map) {
+	ts.parentMap = m
+
+	for _, p := range ts.Properties {
+		p.setParent(m)
+	}
+	for _, t := range ts.Tiles {
+		t.setParent(m)
+	}
+
+	if ts.Image != nil {
+		ts.Image.setParent(m)
+	}
 }
 
 func getTileset(l *Layer) (tileset *Tileset, isEmpty, usesMultipleTilesets bool) {
