@@ -529,6 +529,36 @@ func (m *Map) DrawAll(target pixel.Target, clearColour color.Color, mat pixel.Ma
 	return nil
 }
 
+// GetImageLayerByName returns a Map's ImageLayer by its name
+func (m *Map) GetImageLayerByName(name string) *ImageLayer {
+	for _, l := range m.ImageLayers {
+		if l.Name == name {
+			return l
+		}
+	}
+	return nil
+}
+
+// GetLayerByName returns a Map's Layer by its name
+func (m *Map) GetLayerByName(name string) *Layer {
+	for _, l := range m.Layers {
+		if l.Name == name {
+			return l
+		}
+	}
+	return nil
+}
+
+// GetObjectLayerByName returns a Map's ObjectGroup by its name
+func (m *Map) GetObjectLayerByName(name string) *ObjectGroup {
+	for _, l := range m.ObjectGroups {
+		if l.Name == name {
+			return l
+		}
+	}
+	return nil
+}
+
 // bounds will return a pixel rectangle representing the width-height in pixels.
 func (m *Map) bounds() pixel.Rect {
 	return pixel.R(0, 0, m.pixelWidth(), m.pixelHeight())
@@ -765,36 +795,6 @@ func decodePoints(s string) (points []*Point, err error) {
 		}
 	}
 	return
-}
-
-// GetLayerByName returns a Map's Layer by its name
-func (m *Map) GetLayerByName(name string) *Layer {
-	for _, l := range m.Layers {
-		if l.Name == name {
-			return l
-		}
-	}
-	return nil
-}
-
-// GetImageLayerByName returns a Map's ImageLayer by its name
-func (m *Map) GetImageLayerByName(name string) *ImageLayer {
-	for _, l := range m.ImageLayers {
-		if l.Name == name {
-			return l
-		}
-	}
-	return nil
-}
-
-// GetObjectLayerByName returns a Map's ObjectGroup by its name
-func (m *Map) GetObjectLayerByName(name string) *ObjectGroup {
-	for _, l := range m.ObjectGroups {
-		if l.Name == name {
-			return l
-		}
-	}
-	return nil
 }
 
 /*
