@@ -43,6 +43,7 @@ var (
 	ErrUnknownCompression    = errors.New("tmx: invalid compression method")
 	ErrInvalidDecodedDataLen = errors.New("tmx: invalid decoded data length")
 	ErrInvalidGID            = errors.New("tmx: invalid GID")
+	ErrInvalidObjectType     = errors.New("tmx: the object type requested does not match this object")
 	ErrInvalidPointsField    = errors.New("tmx: invalid points string")
 	ErrInfiniteMap           = errors.New("tmx: infinite maps are not currently supported")
 )
@@ -644,6 +645,35 @@ type Object struct {
 	parentMap *Map
 }
 
+func (o *Object) GetRect() (pixel.Rect, error) {
+	if o.GetType() != RectangleObj {
+		log.WithError(ErrInvalidObjectType).WithField("Object type", o.GetType()).Error("Object.GetRect: object type mismatch")
+		return pixel.R(0, 0, 0, 0), ErrInvalidObjectType
+	}
+
+	return pixel.R(o.X, o.Y, o.X+o.Width, o.Y+o.Height), nil
+}
+
+func (o *Object) GetEllipse() (pixel.Circle, error) {
+	if o.GetType() != EllipseObj {
+		log.WithError(ErrInvalidObjectType).WithField("Object type", o.GetType()).Error("Object.GetEllipse: object type mismatch")
+		return pixel.C(pixel.ZV, 0), ErrInvalidObjectType
+	}
+
+	// In TMX files, ellipses are defined by the containing rectangle.  The X, Y positions are the bottom-left (after we
+	// have flipped them).
+	// Because Pixel does not support irregular ellipses, we take the average of width and height.
+	radius := (o.Width + o.Height) / 4
+	// The centre should be the same as the ellipses drawn in Tiled, this will make outputs more intuitive.
+	centre := pixel.V(o.X+(o.Width/2), o.Y+(o.Height/2))
+
+	return pixel.C(centre, radius), nil
+}
+
+func (o *Object) GetType() ObjectType {
+	return o.objectType
+}
+
 // hydrateType will work out what type this object is.
 func (o *Object) hydrateType() {
 	if o.Polygon != nil {
@@ -660,6 +690,13 @@ func (o *Object) hydrateType() {
 		o.objectType = EllipseObj
 		return
 	}
+
+	if o.Point != nil {
+		o.objectType = PointObj
+		return
+	}
+
+	o.objectType = RectangleObj
 }
 
 func (o *Object) setParent(m *Map) {
