@@ -150,3 +150,38 @@ func TestObject_GetEllipse(t *testing.T) {
 		})
 	}
 }
+
+func TestObject_GetPoint(t *testing.T) {
+	m, err := tilepix.ReadFile("testdata/point.tmx")
+	if err != nil {
+		t.Fatal(err)
+	}
+
+	o := m.GetObjectLayerByName("Object Layer 1").Objects[0]
+
+	tests := []struct {
+		name    string
+		object  *tilepix.Object
+		want    pixel.Vec
+		wantErr bool
+	}{
+		{
+			name:    "getting point",
+			object:  o,
+			want:    pixel.V(160, 160),
+			wantErr: false,
+		},
+	}
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			got, err := o.GetPoint()
+			if (err != nil) != tt.wantErr {
+				t.Errorf("Object.Point() error = %v, wantErr %v", err, tt.wantErr)
+				return
+			}
+			if !reflect.DeepEqual(got, tt.want) {
+				t.Errorf("Object.Point() = %v, want %v", got, tt.want)
+			}
+		})
+	}
+}
