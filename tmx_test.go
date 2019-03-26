@@ -2,7 +2,6 @@ package tilepix_test
 
 import (
 	"io/ioutil"
-	"os"
 	"testing"
 
 	"github.com/bcvery1/tilepix"
@@ -76,16 +75,6 @@ func TestReadFile(t *testing.T) {
 			}
 		})
 	}
-}
-
-func readFromFile(t *testing.T, filename string) (*tilepix.Map, error) {
-	t.Log("Reading", filename)
-	r, err := os.Open("testdata/poly.tmx")
-	if err != nil {
-		t.Fatal(err)
-	}
-	defer r.Close()
-	return tilepix.Read(r)
 }
 
 func TestProperties(t *testing.T) {
