@@ -7,6 +7,7 @@ import (
 	"encoding/base64"
 	"encoding/xml"
 	"errors"
+	"fmt"
 	"image/color"
 	"io"
 	"io/ioutil"
@@ -29,6 +30,24 @@ const (
 // ObjectType is used to represent the types an object can be.
 type ObjectType int
 
+func (o ObjectType) String() string {
+	switch o {
+	case EllipseObj:
+		return "Ellipse"
+	case PolygonObj:
+		return "Polygon"
+	case PolylineObj:
+		return "Polyline"
+	case RectangleObj:
+		return "Rectangle"
+	case PointObj:
+		return "Point"
+	}
+
+	return "Unknown"
+}
+
+// These are the currently supported object types.
 const (
 	EllipseObj ObjectType = iota
 	PolygonObj
@@ -43,6 +62,7 @@ var (
 	ErrUnknownCompression    = errors.New("tmx: invalid compression method")
 	ErrInvalidDecodedDataLen = errors.New("tmx: invalid decoded data length")
 	ErrInvalidGID            = errors.New("tmx: invalid GID")
+	ErrInvalidObjectType     = errors.New("tmx: the object type requested does not match this object")
 	ErrInvalidPointsField    = errors.New("tmx: invalid points string")
 	ErrInfiniteMap           = errors.New("tmx: infinite maps are not currently supported")
 )
@@ -87,7 +107,7 @@ func Read(r io.Reader) (*Map, error) {
 
 	m.setParents()
 
-	log.WithField("Layer count", len(m.Layers)).Debug("Read processing layer tilesets")
+	log.WithField("Layer count", len(m.Layers)).Debug("Read: processing layer tilesets")
 	for _, l := range m.Layers {
 		tileset, isEmpty, usesMultipleTilesets := getTileset(l)
 		if usesMultipleTilesets {
@@ -95,6 +115,13 @@ func Read(r io.Reader) (*Map, error) {
 			continue
 		}
 		l.Empty, l.Tileset = isEmpty, tileset
+	}
+
+	// Tiled calculates co-ordinates from the top-left, flipping the y co-ordinate means we match the standard
+	// bottom-left calculation.
+	log.WithField("Object layer count", len(m.ObjectGroups)).Debug("Read: processing object layers")
+	for _, og := range m.ObjectGroups {
+		og.flipY()
 	}
 
 	return m, nil
@@ -132,6 +159,10 @@ type Data struct {
 
 	// parentMap is the map which contains this object
 	parentMap *Map
+}
+
+func (d *Data) String() string {
+	return fmt.Sprintf("Data{Compression: %s, DataTiles count: %d}", d.Compression, len(d.DataTiles))
 }
 
 func (d *Data) decodeBase64() (data []byte, err error) {
@@ -219,6 +250,10 @@ type Image struct {
 	parentMap *Map
 }
 
+func (i *Image) String() string {
+	return fmt.Sprintf("Image{Source: %s, Size: %dx%d}", i.Source, i.Width, i.Height)
+}
+
 func (i *Image) initSprite() error {
 	if i.sprite != nil {
 		return nil
@@ -276,6 +311,10 @@ func (im *ImageLayer) Draw(target pixel.Target, mat pixel.Matrix) error {
 
 	im.Image.sprite.Draw(target, mat)
 	return nil
+}
+
+func (im *ImageLayer) String() string {
+	return fmt.Sprintf("ImageLayer{Name: '%s', Image: %s}", im.Name, im.Image)
 }
 
 func (im *ImageLayer) setParent(m *Map) {
@@ -355,29 +394,15 @@ func (l *Layer) Draw(target pixel.Target) error {
 
 	// Loop through each decoded tile
 	for tileIndex, tile := range l.DecodedTiles {
-		tID := int(tile.ID)
-
-		if tile.IsNil() {
-			continue
-		}
-
-		// Calculate the framing for the tile within its tileset's source image
-		x, y := tileIDToCoord(tID, ts.Columns, numRows)
-		gamePos := indexToGamePos(tileIndex, l.parentMap.Width, l.parentMap.Height)
-
-		iX := float64(x) * float64(ts.TileWidth)
-		fX := iX + float64(ts.TileWidth)
-		iY := float64(y) * float64(ts.TileHeight)
-		fY := iY + float64(ts.TileHeight)
-
-		l.Tileset.sprite.Set(l.Tileset.sprite.Picture(), pixel.R(iX, iY, fX, fY))
-		// The following added vector is magic numbers - requires proper investigation as to why they work!
-		pos := gamePos.ScaledXY(pixel.V(float64(ts.TileWidth), float64(ts.TileHeight))).Add(pixel.V(float64(ts.TileWidth)*1.5, float64(ts.TileHeight)*-.5))
-		l.Tileset.sprite.Draw(l.batch, pixel.IM.Moved(pos))
+		tile.Draw(tileIndex, ts.Columns, numRows, ts, l.batch)
 	}
 
 	l.batch.Draw(target)
 	return nil
+}
+
+func (l *Layer) String() string {
+	return fmt.Sprintf("Layer{Name: '%s', Properties: %v, TileCount: %d}", l.Name, l.Properties, len(l.DecodedTiles))
 }
 
 func (l *Layer) decode(width, height int) ([]GID, error) {
@@ -463,6 +488,10 @@ func (l *Layer) setParent(m *Map) {
 		p.setParent(m)
 	}
 
+	for _, dt := range l.DecodedTiles {
+		dt.setParent(m)
+	}
+
 	if l.Tileset != nil {
 		l.Tileset.setParent(m)
 	}
@@ -524,7 +553,7 @@ func (m *Map) DrawAll(target pixel.Target, clearColour color.Color, mat pixel.Ma
 		}
 	}
 
-	m.canvas.Draw(target, mat)
+	m.canvas.Draw(target, mat.Moved(m.bounds().Center()))
 
 	return nil
 }
@@ -557,6 +586,20 @@ func (m *Map) GetObjectLayerByName(name string) *ObjectGroup {
 		}
 	}
 	return nil
+}
+
+func (m *Map) String() string {
+	return fmt.Sprintf(
+		"Map{Version: %s, Tile dimensions: %dx%d, Properties: %v, Tilesets: %v, Layers: %v, Object layers: %v, Image layers: %v}",
+		m.Version,
+		m.Width,
+		m.Height,
+		m.Properties,
+		m.Tilesets,
+		m.Layers,
+		m.ObjectGroups,
+		m.ImageLayers,
+	)
 }
 
 // bounds will return a pixel rectangle representing the width-height in pixels.
@@ -674,6 +717,64 @@ type Object struct {
 	parentMap *Map
 }
 
+// GetRect will return a pixel.Circle representation of this object relative to the map (the co-ordinates will match
+// those as drawn in Tiled).  If the object type is not `EllipseObj` this function will return `pixel.C(pixel.ZV, 0)`
+// and an error.
+//
+// Because there is no pixel geometry code for irregular ellipses, this function will average the width and height of
+// the ellipse object from the TMX file, and return a regular circle about the centre of the ellipse.
+func (o *Object) GetEllipse() (pixel.Circle, error) {
+	if o.GetType() != EllipseObj {
+		log.WithError(ErrInvalidObjectType).WithField("Object type", o.GetType()).Error("Object.GetEllipse: object type mismatch")
+		return pixel.C(pixel.ZV, 0), ErrInvalidObjectType
+	}
+
+	// In TMX files, ellipses are defined by the containing rectangle.  The X, Y positions are the bottom-left (after we
+	// have flipped them).
+	// Because Pixel does not support irregular ellipses, we take the average of width and height.
+	radius := (o.Width + o.Height) / 4
+	// The centre should be the same as the ellipses drawn in Tiled, this will make outputs more intuitive.
+	centre := pixel.V(o.X+(o.Width/2), o.Y+(o.Height/2))
+
+	return pixel.C(centre, radius), nil
+}
+
+// GetPoint will return a pixel.Vec representation of this object relative to the map (the co-ordinates will match those
+// as drawn in Tiled).  If the object type is not `PointObj` this function will return `pixel.ZV` and an error.
+func (o *Object) GetPoint() (pixel.Vec, error) {
+	if o.GetType() != PointObj {
+		log.WithError(ErrInvalidObjectType).WithField("Object type", o.GetType()).Error("Object.GetPoint: object type mismatch")
+		return pixel.ZV, ErrInvalidObjectType
+	}
+
+	return pixel.V(o.X, o.Y), nil
+}
+
+// GetRect will return a pixel.Rect representation of this object relative to the map (the co-ordinates will match those
+// as drawn in Tiled).  If the object type is not `RectangleObj` this function will return `pixel.R(0, 0, 0, 0)` and an
+// error.
+func (o *Object) GetRect() (pixel.Rect, error) {
+	if o.GetType() != RectangleObj {
+		log.WithError(ErrInvalidObjectType).WithField("Object type", o.GetType()).Error("Object.GetRect: object type mismatch")
+		return pixel.R(0, 0, 0, 0), ErrInvalidObjectType
+	}
+
+	return pixel.R(o.X, o.Y, o.X+o.Width, o.Y+o.Height), nil
+}
+
+// GetType will return the ObjectType constant type of this object.
+func (o *Object) GetType() ObjectType {
+	return o.objectType
+}
+
+func (o *Object) String() string {
+	return fmt.Sprintf("Object{%s, Name: '%s'}", o.objectType, o.Name)
+}
+
+func (o *Object) flipY() {
+	o.Y = o.parentMap.pixelHeight() - o.Y - o.Height
+}
+
 // hydrateType will work out what type this object is.
 func (o *Object) hydrateType() {
 	if o.Polygon != nil {
@@ -690,6 +791,13 @@ func (o *Object) hydrateType() {
 		o.objectType = EllipseObj
 		return
 	}
+
+	if o.Point != nil {
+		o.objectType = PointObj
+		return
+	}
+
+	o.objectType = RectangleObj
 }
 
 func (o *Object) setParent(m *Map) {
@@ -727,12 +835,22 @@ type ObjectGroup struct {
 	parentMap *Map
 }
 
+func (og *ObjectGroup) String() string {
+	return fmt.Sprintf("ObjectGroup{Name: %s, Properties: %v, Objects: %v}", og.Name, og.Properties, og.Objects)
+}
+
 func (og *ObjectGroup) decode() error {
 	for _, o := range og.Objects {
 		o.hydrateType()
 	}
 
 	return nil
+}
+
+func (og *ObjectGroup) flipY() {
+	for _, o := range og.Objects {
+		o.flipY()
+	}
 }
 
 func (og *ObjectGroup) setParent(m *Map) {
@@ -760,6 +878,10 @@ type Point struct {
 
 	// parentMap is the map which contains this object
 	parentMap *Map
+}
+
+func (p *Point) String() string {
+	return fmt.Sprintf("Point{%d, %d}", p.X, p.Y)
 }
 
 // V converts the Tiled Point to a Pixel Vector.
@@ -828,6 +950,10 @@ func (p *Polygon) setParent(m *Map) {
 	}
 }
 
+func (p *Polygon) String() string {
+	return fmt.Sprintf("Polygon{Points: %v}", p.decodedPoints)
+}
+
 /*
   ___     _      _ _
  | _ \___| |_  _| (_)_ _  ___
@@ -849,6 +975,10 @@ type PolyLine struct {
 // Decode will return a slice of points which make up this polyline.
 func (p *PolyLine) Decode() ([]*Point, error) {
 	return decodePoints(p.Points)
+}
+
+func (p *PolyLine) String() string {
+	return fmt.Sprintf("Polyline{Points: %v}", p.decodedPoints)
 }
 
 func (p *PolyLine) setParent(m *Map) {
@@ -876,6 +1006,10 @@ type Property struct {
 	parentMap *Map
 }
 
+func (p *Property) String() string {
+	return fmt.Sprintf("Property{%s: %s}", p.Name, p.Value)
+}
+
 func (p *Property) setParent(m *Map) {
 	p.parentMap = m
 }
@@ -896,6 +1030,10 @@ type Tile struct {
 	parentMap *Map
 }
 
+func (t *Tile) String() string {
+	return fmt.Sprintf("Tile{ID: %d}", t.ID)
+}
+
 func (t *Tile) setParent(m *Map) {
 	t.parentMap = m
 
@@ -912,12 +1050,49 @@ type DecodedTile struct {
 	VerticalFlip   bool
 	DiagonalFlip   bool
 	Nil            bool
+
+	sprite *pixel.Sprite
+	pos    pixel.Vec
+
+	// parentMap is the map which contains this object
+	parentMap *Map
+}
+
+// Draw will draw the tile to the target provided.  This will calculate the sprite from the provided tileset and set the
+// DecodedTiles' internal `sprite` property; this is so it is only calculated the first time.
+func (t *DecodedTile) Draw(ind, columns, numRows int, ts *Tileset, target pixel.Target) {
+	if t.IsNil() {
+		return
+	}
+
+	if t.sprite == nil {
+		// Calculate the framing for the tile within its tileset's source image
+		x, y := tileIDToCoord(t.ID, columns, numRows)
+		gamePos := indexToGamePos(ind, t.parentMap.Width, t.parentMap.Height)
+
+		iX := float64(x) * float64(ts.TileWidth)
+		fX := iX + float64(ts.TileWidth)
+		iY := float64(y) * float64(ts.TileHeight)
+		fY := iY + float64(ts.TileHeight)
+
+		t.sprite = pixel.NewSprite(ts.sprite.Picture(), pixel.R(iX, iY, fX, fY))
+		t.pos = gamePos.ScaledXY(pixel.V(float64(ts.TileWidth), float64(ts.TileHeight))).Add(pixel.V(float64(ts.TileWidth), float64(ts.TileHeight)).Scaled(0.5))
+	}
+	t.sprite.Draw(target, pixel.IM.Moved(t.pos))
+}
+
+func (t *DecodedTile) String() string {
+	return fmt.Sprintf("DecodedTile{ID: %d, Is nil: %t}", t.ID, t.Nil)
 }
 
 // IsNil returns whether this tile is nil.  If so, it means there is nothing set for the tile, and should be skipped in
 // drawing.
 func (t *DecodedTile) IsNil() bool {
 	return t.Nil
+}
+
+func (t *DecodedTile) setParent(m *Map) {
+	t.parentMap = m
 }
 
 /*
@@ -946,6 +1121,18 @@ type Tileset struct {
 
 	// parentMap is the map which contains this object
 	parentMap *Map
+}
+
+func (ts *Tileset) String() string {
+	return fmt.Sprintf(
+		"TileSet{Name: %s, Tile size: %dx%d, Tile spacing: %d, Tilecount: %d, Properties: %v}",
+		ts.Name,
+		ts.TileWidth,
+		ts.TileHeight,
+		ts.Spacing,
+		ts.Tilecount,
+		ts.Properties,
+	)
 }
 
 func (ts *Tileset) setParent(m *Map) {
