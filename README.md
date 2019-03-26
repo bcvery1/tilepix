@@ -39,7 +39,7 @@ Pixel centric.
 package main
 
 import (
-	"color"
+	"image/color"
 	
 	// We must use blank imports for any image formats in the tileset image sources.
 	// You will get an error if a blank import is not made; TilePix does not import
@@ -74,7 +74,7 @@ func run() {
 		win.Clear(color.White)
 		
 		// Draw all layers to the window.
-		if err := m.DrawAll(win); err != nil {
+		if err := m.DrawAll(win, color.White, pixel.IM); err != nil {
 			panic(err)
 		}
 		
