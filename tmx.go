@@ -639,18 +639,6 @@ type Object struct {
 	parentMap *Map
 }
 
-// GetRect will return a pixel.Rect representation of this object relative to the map (the co-ordinates will match those
-// as drawn in Tiled).  If the object type is not `RectangleObj` this function will return `pixel.R(0, 0, 0, 0)` and an
-// error.
-func (o *Object) GetRect() (pixel.Rect, error) {
-	if o.GetType() != RectangleObj {
-		log.WithError(ErrInvalidObjectType).WithField("Object type", o.GetType()).Error("Object.GetRect: object type mismatch")
-		return pixel.R(0, 0, 0, 0), ErrInvalidObjectType
-	}
-
-	return pixel.R(o.X, o.Y, o.X+o.Width, o.Y+o.Height), nil
-}
-
 // GetRect will return a pixel.Circle representation of this object relative to the map (the co-ordinates will match
 // those as drawn in Tiled).  If the object type is not `EllipseObj` this function will return `pixel.C(pixel.ZV, 0)`
 // and an error.
@@ -671,6 +659,29 @@ func (o *Object) GetEllipse() (pixel.Circle, error) {
 	centre := pixel.V(o.X+(o.Width/2), o.Y+(o.Height/2))
 
 	return pixel.C(centre, radius), nil
+}
+
+// GetPoint will return a pixel.Vec representation of this object relative to the map (the co-ordinates will match those
+// as drawn in Tiled).  If the object type is not `PointObj` this function will return `pixel.ZV` and an error.
+func (o *Object) GetPoint() (pixel.Vec, error) {
+	if o.GetType() != PointObj {
+		log.WithError(ErrInvalidObjectType).WithField("Object type", o.GetType()).Error("Object.GetPoint: object type mismatch")
+		return pixel.ZV, ErrInvalidObjectType
+	}
+
+	return pixel.V(o.X, o.Y), nil
+}
+
+// GetRect will return a pixel.Rect representation of this object relative to the map (the co-ordinates will match those
+// as drawn in Tiled).  If the object type is not `RectangleObj` this function will return `pixel.R(0, 0, 0, 0)` and an
+// error.
+func (o *Object) GetRect() (pixel.Rect, error) {
+	if o.GetType() != RectangleObj {
+		log.WithError(ErrInvalidObjectType).WithField("Object type", o.GetType()).Error("Object.GetRect: object type mismatch")
+		return pixel.R(0, 0, 0, 0), ErrInvalidObjectType
+	}
+
+	return pixel.R(o.X, o.Y, o.X+o.Width, o.Y+o.Height), nil
 }
 
 // GetType will return the ObjectType constant type of this object.
