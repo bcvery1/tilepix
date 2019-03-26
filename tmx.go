@@ -29,6 +29,7 @@ const (
 // ObjectType is used to represent the types an object can be.
 type ObjectType int
 
+// These are the currently supported object types.
 const (
 	EllipseObj ObjectType = iota
 	PolygonObj
@@ -98,6 +99,8 @@ func Read(r io.Reader) (*Map, error) {
 		l.Empty, l.Tileset = isEmpty, tileset
 	}
 
+	// Tiled calculates co-ordinates from the top-left, flipping the y co-ordinate means we match the standard
+	// bottom-left calculation.
 	log.WithField("Object layer count", len(m.ObjectGroups)).Debug("Read: processing object layers")
 	for _, og := range m.ObjectGroups {
 		og.flipY()
@@ -636,6 +639,9 @@ type Object struct {
 	parentMap *Map
 }
 
+// GetRect will return a pixel.Rect representation of this object relative to the map (the co-ordinates will match those
+// as drawn in Tiled).  If the object type is not `RectangleObj` this function will return `pixel.R(0, 0, 0, 0)` and an
+// error.
 func (o *Object) GetRect() (pixel.Rect, error) {
 	if o.GetType() != RectangleObj {
 		log.WithError(ErrInvalidObjectType).WithField("Object type", o.GetType()).Error("Object.GetRect: object type mismatch")
@@ -645,6 +651,12 @@ func (o *Object) GetRect() (pixel.Rect, error) {
 	return pixel.R(o.X, o.Y, o.X+o.Width, o.Y+o.Height), nil
 }
 
+// GetRect will return a pixel.Circle representation of this object relative to the map (the co-ordinates will match
+// those as drawn in Tiled).  If the object type is not `EllipseObj` this function will return `pixel.C(pixel.ZV, 0)`
+// and an error.
+//
+// Because there is no pixel geometry code for irregular ellipses, this function will average the width and height of
+// the ellipse object from the TMX file, and return a regular circle about the centre of the ellipse.
 func (o *Object) GetEllipse() (pixel.Circle, error) {
 	if o.GetType() != EllipseObj {
 		log.WithError(ErrInvalidObjectType).WithField("Object type", o.GetType()).Error("Object.GetEllipse: object type mismatch")
@@ -661,6 +673,7 @@ func (o *Object) GetEllipse() (pixel.Circle, error) {
 	return pixel.C(centre, radius), nil
 }
 
+// GetType will return the ObjectType constant type of this object.
 func (o *Object) GetType() ObjectType {
 	return o.objectType
 }
@@ -958,7 +971,9 @@ type DecodedTile struct {
 	parentMap *Map
 }
 
-func (t *DecodedTile) Draw(ind, columns, numRows int, ts *Tileset, batch *pixel.Batch) {
+// Draw will draw the tile to the target provided.  This will calculate the sprite from the provided tileset and set the
+// DecodedTiles' internal `sprite` property; this is so it is only calculated the first time.
+func (t *DecodedTile) Draw(ind, columns, numRows int, ts *Tileset, target pixel.Target) {
 	if t.IsNil() {
 		return
 	}
@@ -976,7 +991,7 @@ func (t *DecodedTile) Draw(ind, columns, numRows int, ts *Tileset, batch *pixel.
 		t.sprite = pixel.NewSprite(ts.sprite.Picture(), pixel.R(iX, iY, fX, fY))
 		t.pos = gamePos.ScaledXY(pixel.V(float64(ts.TileWidth), float64(ts.TileHeight))).Add(pixel.V(float64(ts.TileWidth), float64(ts.TileHeight)).Scaled(0.5))
 	}
-	t.sprite.Draw(batch, pixel.IM.Moved(t.pos))
+	t.sprite.Draw(target, pixel.IM.Moved(t.pos))
 }
 
 // IsNil returns whether this tile is nil.  If so, it means there is nothing set for the tile, and should be skipped in
