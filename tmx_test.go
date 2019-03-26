@@ -133,7 +133,7 @@ func TestObject_GetEllipse(t *testing.T) {
 		{
 			name:    "getting ellipse",
 			object:  o,
-			want:    pixel.C(pixel.V(50, 100), 200),
+			want:    pixel.C(pixel.V(50, 150), 100),
 			wantErr: false,
 		},
 	}
