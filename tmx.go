@@ -511,7 +511,7 @@ func (m *Map) DrawAll(target pixel.Target, clearColour color.Color, mat pixel.Ma
 		}
 	}
 
-	m.canvas.Draw(target, mat)
+	m.canvas.Draw(target, mat.Moved(m.bounds().Center()))
 
 	return nil
 }
@@ -959,8 +959,7 @@ func (t *DecodedTile) Draw(ind, columns, numRows int, ts *Tileset, batch *pixel.
 		fY := iY + float64(ts.TileHeight)
 
 		t.sprite = pixel.NewSprite(ts.sprite.Picture(), pixel.R(iX, iY, fX, fY))
-		// t.pos = pixel.ZV
-		t.pos = gamePos.ScaledXY(pixel.V(float64(ts.TileWidth), float64(ts.TileHeight))).Add(pixel.V(float64(ts.TileWidth)*1.5, float64(ts.TileHeight)*-.5))
+		t.pos = gamePos.ScaledXY(pixel.V(float64(ts.TileWidth), float64(ts.TileHeight))).Add(pixel.V(float64(ts.TileWidth), float64(ts.TileHeight)).Scaled(0.5))
 	}
 	t.sprite.Draw(batch, pixel.IM.Moved(t.pos))
 }

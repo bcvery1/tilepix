@@ -63,7 +63,7 @@ func tileIDToCoord(tID ID, numColumns int, numRows int) (x int, y int) {
 func indexToGamePos(idx int, width int, height int) pixel.Vec {
 	gamePos := pixel.V(
 		float64(idx%width)-1,
-		float64(height)-float64(idx/width),
+		float64(height)-float64(idx/width)-1,
 	)
 	return gamePos
 }
