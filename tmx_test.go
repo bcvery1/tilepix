@@ -2,10 +2,11 @@ package tilepix_test
 
 import (
 	"io/ioutil"
+	"reflect"
 	"testing"
 
 	"github.com/bcvery1/tilepix"
-
+	"github.com/faiface/pixel"
 	log "github.com/sirupsen/logrus"
 )
 
@@ -112,5 +113,40 @@ func TestGetObjectLayerByName(t *testing.T) {
 	layer := m.GetObjectLayerByName("Object Layer 1")
 	if layer.Name != "Object Layer 1" {
 		t.Error("error get object layer")
+	}
+}
+
+func TestObject_GetEllipse(t *testing.T) {
+	m, err := tilepix.ReadFile("testdata/ellipse.tmx")
+	if err != nil {
+		t.Fatal(err)
+	}
+
+	o := m.GetObjectLayerByName("Object Layer 1").Objects[0]
+
+	tests := []struct {
+		name    string
+		object  *tilepix.Object
+		want    pixel.Circle
+		wantErr bool
+	}{
+		{
+			name:    "getting ellipse",
+			object:  o,
+			want:    pixel.C(pixel.V(50, 100), 200),
+			wantErr: false,
+		},
+	}
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			got, err := o.GetEllipse()
+			if (err != nil) != tt.wantErr {
+				t.Errorf("Object.GetEllipse() error = %v, wantErr %v", err, tt.wantErr)
+				return
+			}
+			if !reflect.DeepEqual(got, tt.want) {
+				t.Errorf("Object.GetEllipse() = %v, want %v", got, tt.want)
+			}
+		})
 	}
 }
