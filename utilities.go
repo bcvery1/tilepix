@@ -53,9 +53,10 @@ func loadSpriteFromFile(path string) (*pixel.Sprite, pixel.Picture, error) {
 	return loadSprite(f)
 }
 
-func tileIDToCoord(tID int, numColumns int, numRows int) (x int, y int) {
-	x = tID % numColumns
-	y = numRows - (tID / numColumns) - 1
+func tileIDToCoord(tID ID, numColumns int, numRows int) (x int, y int) {
+	tIDInt := int(tID)
+	x = tIDInt % numColumns
+	y = numRows - (tIDInt / numColumns) - 1
 	return
 }
 

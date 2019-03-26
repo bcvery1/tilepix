@@ -356,25 +356,7 @@ func (l *Layer) Draw(target pixel.Target) error {
 
 	// Loop through each decoded tile
 	for tileIndex, tile := range l.DecodedTiles {
-		tID := int(tile.ID)
-
-		if tile.IsNil() {
-			continue
-		}
-
-		// Calculate the framing for the tile within its tileset's source image
-		x, y := tileIDToCoord(tID, ts.Columns, numRows)
-		gamePos := indexToGamePos(tileIndex, l.parentMap.Width, l.parentMap.Height)
-
-		iX := float64(x) * float64(ts.TileWidth)
-		fX := iX + float64(ts.TileWidth)
-		iY := float64(y) * float64(ts.TileHeight)
-		fY := iY + float64(ts.TileHeight)
-
-		l.Tileset.sprite.Set(l.Tileset.sprite.Picture(), pixel.R(iX, iY, fX, fY))
-		// The following added vector is magic numbers - requires proper investigation as to why they work!
-		pos := gamePos.ScaledXY(pixel.V(float64(ts.TileWidth), float64(ts.TileHeight))).Add(pixel.V(float64(ts.TileWidth)*1.5, float64(ts.TileHeight)*-.5))
-		l.Tileset.sprite.Draw(l.batch, pixel.IM.Moved(pos))
+		tile.Draw(tileIndex, ts.Columns, numRows, ts, l.batch)
 	}
 
 	l.batch.Draw(target)
@@ -462,6 +444,10 @@ func (l *Layer) setParent(m *Map) {
 
 	for _, p := range l.Properties {
 		p.setParent(m)
+	}
+
+	for _, dt := range l.DecodedTiles {
+		dt.setParent(m)
 	}
 
 	if l.Tileset != nil {
@@ -949,12 +935,44 @@ type DecodedTile struct {
 	VerticalFlip   bool
 	DiagonalFlip   bool
 	Nil            bool
+
+	sprite *pixel.Sprite
+	pos    pixel.Vec
+
+	// parentMap is the map which contains this object
+	parentMap *Map
+}
+
+func (t *DecodedTile) Draw(ind, columns, numRows int, ts *Tileset, batch *pixel.Batch) {
+	if t.IsNil() {
+		return
+	}
+
+	if t.sprite == nil {
+		// Calculate the framing for the tile within its tileset's source image
+		x, y := tileIDToCoord(t.ID, columns, numRows)
+		gamePos := indexToGamePos(ind, t.parentMap.Width, t.parentMap.Height)
+
+		iX := float64(x) * float64(ts.TileWidth)
+		fX := iX + float64(ts.TileWidth)
+		iY := float64(y) * float64(ts.TileHeight)
+		fY := iY + float64(ts.TileHeight)
+
+		t.sprite = pixel.NewSprite(ts.sprite.Picture(), pixel.R(iX, iY, fX, fY))
+		// t.pos = pixel.ZV
+		t.pos = gamePos.ScaledXY(pixel.V(float64(ts.TileWidth), float64(ts.TileHeight))).Add(pixel.V(float64(ts.TileWidth)*1.5, float64(ts.TileHeight)*-.5))
+	}
+	t.sprite.Draw(batch, pixel.IM.Moved(t.pos))
 }
 
 // IsNil returns whether this tile is nil.  If so, it means there is nothing set for the tile, and should be skipped in
 // drawing.
 func (t *DecodedTile) IsNil() bool {
 	return t.Nil
+}
+
+func (t *DecodedTile) setParent(m *Map) {
+	t.parentMap = m
 }
 
 /*
