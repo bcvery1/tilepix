@@ -88,7 +88,7 @@ func Read(r io.Reader) (*Map, error) {
 
 	m.setParents()
 
-	log.WithField("Layer count", len(m.Layers)).Debug("Read processing layer tilesets")
+	log.WithField("Layer count", len(m.Layers)).Debug("Read: processing layer tilesets")
 	for _, l := range m.Layers {
 		tileset, isEmpty, usesMultipleTilesets := getTileset(l)
 		if usesMultipleTilesets {
@@ -96,6 +96,11 @@ func Read(r io.Reader) (*Map, error) {
 			continue
 		}
 		l.Empty, l.Tileset = isEmpty, tileset
+	}
+
+	log.WithField("Object layer count", len(m.ObjectGroups)).Debug("Read: processing object layers")
+	for _, og := range m.ObjectGroups {
+		og.flipY()
 	}
 
 	return m, nil
@@ -660,6 +665,10 @@ func (o *Object) GetType() ObjectType {
 	return o.objectType
 }
 
+func (o *Object) flipY() {
+	o.Y = o.parentMap.pixelHeight() - o.Y - o.Height
+}
+
 // hydrateType will work out what type this object is.
 func (o *Object) hydrateType() {
 	if o.Polygon != nil {
@@ -726,6 +735,12 @@ func (og *ObjectGroup) decode() error {
 	}
 
 	return nil
+}
+
+func (og *ObjectGroup) flipY() {
+	for _, o := range og.Objects {
+		o.flipY()
+	}
 }
 
 func (og *ObjectGroup) setParent(m *Map) {
