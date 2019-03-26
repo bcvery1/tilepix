@@ -43,6 +43,8 @@ func (o ObjectType) String() string {
 	case PointObj:
 		return "Point"
 	}
+
+	return "Unknown"
 }
 
 // These are the currently supported object types.
