@@ -7,6 +7,7 @@ import (
 	"encoding/base64"
 	"encoding/xml"
 	"errors"
+	"fmt"
 	"image/color"
 	"io"
 	"io/ioutil"
@@ -28,6 +29,21 @@ const (
 
 // ObjectType is used to represent the types an object can be.
 type ObjectType int
+
+func (o ObjectType) String() string {
+	switch o {
+	case EllipseObj:
+		return "Ellipse"
+	case PolygonObj:
+		return "Polygon"
+	case PolylineObj:
+		return "Polyline"
+	case RectangleObj:
+		return "Rectangle"
+	case PointObj:
+		return "Point"
+	}
+}
 
 // These are the currently supported object types.
 const (
@@ -143,6 +159,10 @@ type Data struct {
 	parentMap *Map
 }
 
+func (d *Data) String() string {
+	return fmt.Sprintf("Data{Compression: %s, DataTiles count: %d}", d.Compression, len(d.DataTiles))
+}
+
 func (d *Data) decodeBase64() (data []byte, err error) {
 	rawData := bytes.TrimSpace(d.RawData)
 	r := bytes.NewReader(rawData)
@@ -228,6 +248,10 @@ type Image struct {
 	parentMap *Map
 }
 
+func (i *Image) String() string {
+	return fmt.Sprintf("Image{Source: %s, Size: %dx%d}", i.Source, i.Width, i.Height)
+}
+
 func (i *Image) initSprite() error {
 	if i.sprite != nil {
 		return nil
@@ -285,6 +309,10 @@ func (im *ImageLayer) Draw(target pixel.Target, mat pixel.Matrix) error {
 
 	im.Image.sprite.Draw(target, mat)
 	return nil
+}
+
+func (im *ImageLayer) String() string {
+	return fmt.Sprintf("ImageLayer{Name: '%s', Image: %s}", im.Name, im.Image)
 }
 
 func (im *ImageLayer) setParent(m *Map) {
@@ -369,6 +397,10 @@ func (l *Layer) Draw(target pixel.Target) error {
 
 	l.batch.Draw(target)
 	return nil
+}
+
+func (l *Layer) String() string {
+	return fmt.Sprintf("Layer{Name: '%s', Properties: %v, TileCount: %d}", l.Name, l.Properties, len(l.DecodedTiles))
 }
 
 func (l *Layer) decode(width, height int) ([]GID, error) {
@@ -522,6 +554,20 @@ func (m *Map) DrawAll(target pixel.Target, clearColour color.Color, mat pixel.Ma
 	m.canvas.Draw(target, mat.Moved(m.bounds().Center()))
 
 	return nil
+}
+
+func (m *Map) String() string {
+	return fmt.Sprintf(
+		"Map{Version: %s, Tile dimensions: %dx%d, Properties: %v, Tilesets: %v, Layers: %v, Object layers: %v, Image layers: %v}",
+		m.Version,
+		m.Width,
+		m.Height,
+		m.Properties,
+		m.Tilesets,
+		m.Layers,
+		m.ObjectGroups,
+		m.ImageLayers,
+	)
 }
 
 // bounds will return a pixel rectangle representing the width-height in pixels.
@@ -689,6 +735,10 @@ func (o *Object) GetType() ObjectType {
 	return o.objectType
 }
 
+func (o *Object) String() string {
+	return fmt.Sprintf("Object{%s, Name: '%s'}", o.objectType, o.Name)
+}
+
 func (o *Object) flipY() {
 	o.Y = o.parentMap.pixelHeight() - o.Y - o.Height
 }
@@ -753,6 +803,10 @@ type ObjectGroup struct {
 	parentMap *Map
 }
 
+func (og *ObjectGroup) String() string {
+	return fmt.Sprintf("ObjectGroup{Name: %s, Properties: %v, Objects: %v}", og.Name, og.Properties, og.Objects)
+}
+
 func (og *ObjectGroup) decode() error {
 	for _, o := range og.Objects {
 		o.hydrateType()
@@ -792,6 +846,10 @@ type Point struct {
 
 	// parentMap is the map which contains this object
 	parentMap *Map
+}
+
+func (p *Point) String() string {
+	return fmt.Sprintf("Point{%d, %d}", p.X, p.Y)
 }
 
 // V converts the Tiled Point to a Pixel Vector.
@@ -890,6 +948,10 @@ func (p *Polygon) setParent(m *Map) {
 	}
 }
 
+func (p *Polygon) String() string {
+	return fmt.Sprintf("Polygon{Points: %v}", p.decodedPoints)
+}
+
 /*
   ___     _      _ _
  | _ \___| |_  _| (_)_ _  ___
@@ -911,6 +973,10 @@ type PolyLine struct {
 // Decode will return a slice of points which make up this polyline.
 func (p *PolyLine) Decode() ([]*Point, error) {
 	return decodePoints(p.Points)
+}
+
+func (p *PolyLine) String() string {
+	return fmt.Sprintf("Polyline{Points: %v}", p.decodedPoints)
 }
 
 func (p *PolyLine) setParent(m *Map) {
@@ -938,6 +1004,10 @@ type Property struct {
 	parentMap *Map
 }
 
+func (p *Property) String() string {
+	return fmt.Sprintf("Property{%s: %s}", p.Name, p.Value)
+}
+
 func (p *Property) setParent(m *Map) {
 	p.parentMap = m
 }
@@ -956,6 +1026,10 @@ type Tile struct {
 
 	// parentMap is the map which contains this object
 	parentMap *Map
+}
+
+func (t *Tile) String() string {
+	return fmt.Sprintf("Tile{ID: %d}", t.ID)
 }
 
 func (t *Tile) setParent(m *Map) {
@@ -1005,6 +1079,10 @@ func (t *DecodedTile) Draw(ind, columns, numRows int, ts *Tileset, target pixel.
 	t.sprite.Draw(target, pixel.IM.Moved(t.pos))
 }
 
+func (t *DecodedTile) String() string {
+	return fmt.Sprintf("DecodedTile{ID: %d, Is nil: %t}", t.ID, t.Nil)
+}
+
 // IsNil returns whether this tile is nil.  If so, it means there is nothing set for the tile, and should be skipped in
 // drawing.
 func (t *DecodedTile) IsNil() bool {
@@ -1041,6 +1119,18 @@ type Tileset struct {
 
 	// parentMap is the map which contains this object
 	parentMap *Map
+}
+
+func (ts *Tileset) String() string {
+	return fmt.Sprintf(
+		"TileSet{Name: %s, Tile size: %dx%d, Tile spacing: %d, Tilecount: %d, Properties: %v}",
+		ts.Name,
+		ts.TileWidth,
+		ts.TileHeight,
+		ts.Spacing,
+		ts.Tilecount,
+		ts.Properties,
+	)
 }
 
 func (ts *Tileset) setParent(m *Map) {
