@@ -11,7 +11,7 @@ func TestGetLayerByName(t *testing.T) {
 	if err != nil {
 		t.Fatal(err)
 	}
-	layer := m.GetLayerByName("Tile Layer 1")
+	layer := m.GetTileLayerByName("Tile Layer 1")
 	if layer.Name != "Tile Layer 1" {
 		t.Error("error get layer")
 	}
