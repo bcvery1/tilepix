@@ -105,8 +105,8 @@ func Read(r io.Reader) (*Map, error) {
 
 	m.setParents()
 
-	log.WithField("TileLayer count", len(m.Layers)).Debug("Read: processing layer tilesets")
-	for _, l := range m.Layers {
+	log.WithField("TileLayer count", len(m.TileLayers)).Debug("Read: processing layer tilesets")
+	for _, l := range m.TileLayers {
 		tileset, isEmpty, usesMultipleTilesets := getTileset(l)
 		if usesMultipleTilesets {
 			log.Debug("Read: multiple tilesets in use")

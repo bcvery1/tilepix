@@ -30,7 +30,7 @@ type Map struct {
 	TileHeight   int            `xml:"tileheight,attr"`
 	Properties   []*Property    `xml:"properties>property"`
 	Tilesets     []*Tileset     `xml:"tileset"`
-	Layers       []*TileLayer   `xml:"layer"`
+	TileLayers   []*TileLayer   `xml:"layer"`
 	ObjectGroups []*ObjectGroup `xml:"objectgroup"`
 	Infinite     bool           `xml:"infinite,attr"`
 	ImageLayers  []*ImageLayer  `xml:"imagelayer"`
@@ -51,7 +51,7 @@ func (m *Map) DrawAll(target pixel.Target, clearColour color.Color, mat pixel.Ma
 	}
 	m.canvas.Clear(clearColour)
 
-	for _, l := range m.Layers {
+	for _, l := range m.TileLayers {
 		if err := l.Draw(m.canvas); err != nil {
 			log.WithError(err).Error("Map.DrawAll: could not draw layer")
 			return err
@@ -83,7 +83,7 @@ func (m *Map) GetImageLayerByName(name string) *ImageLayer {
 
 // GetLayerByName returns a Map's TileLayer by its name
 func (m *Map) GetLayerByName(name string) *TileLayer {
-	for _, l := range m.Layers {
+	for _, l := range m.TileLayers {
 		if l.Name == name {
 			return l
 		}
@@ -103,13 +103,13 @@ func (m *Map) GetObjectLayerByName(name string) *ObjectGroup {
 
 func (m *Map) String() string {
 	return fmt.Sprintf(
-		"Map{Version: %s, Tile dimensions: %dx%d, Properties: %v, Tilesets: %v, Layers: %v, Object layers: %v, Image layers: %v}",
+		"Map{Version: %s, Tile dimensions: %dx%d, Properties: %v, Tilesets: %v, TileLayers: %v, Object layers: %v, Image layers: %v}",
 		m.Version,
 		m.Width,
 		m.Height,
 		m.Properties,
 		m.Tilesets,
-		m.Layers,
+		m.TileLayers,
 		m.ObjectGroups,
 		m.ImageLayers,
 	)
@@ -153,7 +153,7 @@ func (m *Map) decodeGID(gid GID) (*DecodedTile, error) {
 
 func (m *Map) decodeLayers() error {
 	// Decode tile layers
-	for _, l := range m.Layers {
+	for _, l := range m.TileLayers {
 		gids, err := l.decode(m.Width, m.Height)
 		if err != nil {
 			log.WithError(err).Error("Map.decodeLayers: could not decode layer")
@@ -195,7 +195,7 @@ func (m *Map) setParents() {
 	for _, im := range m.ImageLayers {
 		im.setParent(m)
 	}
-	for _, l := range m.Layers {
+	for _, l := range m.TileLayers {
 		l.setParent(m)
 	}
 }

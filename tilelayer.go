@@ -64,7 +64,7 @@ func (l *TileLayer) Batch() (*pixel.Batch, error) {
 	return l.batch, nil
 }
 
-// Draw will use the Layers' batch to draw all tiles within the TileLayer to the target.
+// Draw will use the TileLayers' batch to draw all tiles within the TileLayer to the target.
 func (l *TileLayer) Draw(target pixel.Target) error {
 	// Initialise the batch
 	if _, err := l.Batch(); err != nil {
