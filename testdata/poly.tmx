@@ -10,9 +10,15 @@
  </layer>
  <objectgroup name="Object Layer 1">
   <object id="2" name="Polygon" x="23" y="16">
+   <properties>
+    <property name="foo" value=""/>
+   </properties>
    <polygon points="0,0 2,91 100,54"/>
   </object>
   <object id="3" name="Polyline" x="212" y="37">
+   <properties>
+    <property name="foo" value=""/>
+   </properties>
    <polyline points="0,0 -46,54 -1,77 -43,114 5,154"/>
   </object>
  </objectgroup>
