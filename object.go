@@ -83,7 +83,7 @@ func (o *Object) GetRect() (pixel.Rect, error) {
 	return pixel.R(o.X, o.Y, o.X+o.Width, o.Y+o.Height), nil
 }
 
-// GetRect will return a pixel.Vec slice representation of this object relative to the map (the co-ordinates will match
+// GetPolygon will return a pixel.Vec slice representation of this object relative to the map (the co-ordinates will match
 // those as drawn in Tiled).  If the object type is not `PolygonObj` this function will return `nil` and an error.
 func (o *Object) GetPolygon() ([]pixel.Vec, error) {
 	if o.GetType() != PolygonObj {
