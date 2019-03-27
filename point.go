@@ -70,3 +70,9 @@ func decodePoints(s string) ([]*Point, error) {
 
 	return points, nil
 }
+
+// flipY will get the inverse Y co-ordinate based on the parent maps' size.  This is because Tiled draws from the
+// top-right instead of the bottom-left.
+func (p *Point) flipY() {
+	p.Y = int(p.parentMap.pixelHeight()) - p.Y
+}
