@@ -83,6 +83,28 @@ func (o *Object) GetRect() (pixel.Rect, error) {
 	return pixel.R(o.X, o.Y, o.X+o.Width, o.Y+o.Height), nil
 }
 
+// GetRect will return a pixel.Vec slice representation of this object relative to the map (the co-ordinates will match
+// those as drawn in Tiled).  If the object type is not `PolygonObj` this function will return `nil` and an error.
+func (o *Object) GetPolygon() ([]pixel.Vec, error) {
+	if o.GetType() != PolygonObj {
+		log.WithError(ErrInvalidObjectType).WithField("Object type", o.GetType()).Error("Object.GetPolygon: object type mismatch")
+		return nil, ErrInvalidObjectType
+	}
+
+	points, err := o.Polygon.Decode()
+	if err != nil {
+		log.WithError(err).Error("Object.GetPolygon: could not decode Polygon")
+		return nil, err
+	}
+
+	var pixelPoints []pixel.Vec
+	for _, p := range points {
+		pixelPoints = append(pixelPoints, p.V())
+	}
+
+	return pixelPoints, nil
+}
+
 // GetType will return the ObjectType constant type of this object.
 func (o *Object) GetType() ObjectType {
 	return o.objectType
