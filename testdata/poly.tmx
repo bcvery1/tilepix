@@ -1,7 +1,6 @@
 <?xml version="1.0" encoding="UTF-8"?>
-<!DOCTYPE map SYSTEM "http://mapeditor.org/dtd/1.0/map.dtd">
-<map version="1.0" orientation="orthogonal" width="32" height="32" tilewidth="8" tileheight="8">
- <tileset firstgid="1" name="default" tilewidth="8" tileheight="8">
+<map version="1.0" tiledversion="1.1.6" orientation="orthogonal" renderorder="right-down" width="32" height="32" tilewidth="8" tileheight="8" infinite="0" nextobjectid="4">
+ <tileset firstgid="1" name="default" tilewidth="8" tileheight="8" tilecount="0" columns="0">
   <image source="tiles.png" width="112" height="16"/>
  </tileset>
  <layer name="Tile Layer 1" width="32" height="32">
@@ -9,12 +8,12 @@
    eJztzycWgDAABNHQO6H3+5+TkVEIErnivxWrJjLGxEiQIkOOAiUq1GjQokPv/L5rMWDEhBkLVmzYceDEhRuP8/tuqI6/G6pD/epXv/rVr371q1/96le/+tWv/q99AZPHOgE=
   </data>
  </layer>
- <objectgroup name="Object Layer 1" width="32" height="32">
-  <object x="46" y="51">
-   <polyline points="0,0 135,78 -15,131 -1,0"/>
-   <properties>
-    <property name="foo" value="bar"/>
-   </properties>
+ <objectgroup name="Object Layer 1">
+  <object id="2" name="Polygon" x="23" y="16">
+   <polygon points="0,0 2,91 100,54"/>
+  </object>
+  <object id="3" name="Polyline" x="212" y="37">
+   <polyline points="0,0 -46,54 -1,77 -43,114 5,154"/>
   </object>
  </objectgroup>
 </map>
