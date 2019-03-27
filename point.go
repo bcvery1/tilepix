@@ -39,28 +39,34 @@ func (p *Point) setParent(m *Map) {
 	p.parentMap = m
 }
 
-func decodePoints(s string) (points []*Point, err error) {
+func decodePoints(s string) ([]*Point, error) {
 	pointStrings := strings.Split(s, " ")
 
-	points = make([]*Point, len(pointStrings))
-	for i, pointString := range pointStrings {
+	var points []*Point
+	var err error
+	for _, pointString := range pointStrings {
 		coordStrings := strings.Split(pointString, ",")
 		if len(coordStrings) != 2 {
 			log.WithError(ErrInvalidPointsField).WithField("Co-ordinate strings", coordStrings).Error("decodePoints: mismatch co-ordinates string length")
 			return nil, ErrInvalidPointsField
 		}
 
-		points[i].X, err = strconv.Atoi(coordStrings[0])
+		point := &Point{}
+
+		point.X, err = strconv.Atoi(coordStrings[0])
 		if err != nil {
 			log.WithError(err).WithField("Point string", coordStrings[0]).Error("decodePoints: could not parse X co-ordinate string")
 			return nil, err
 		}
 
-		points[i].Y, err = strconv.Atoi(coordStrings[1])
+		point.Y, err = strconv.Atoi(coordStrings[1])
 		if err != nil {
 			log.WithError(err).WithField("Point string", coordStrings[1]).Error("decodePoints: could not parse X co-ordinate string")
 			return nil, err
 		}
+
+		points = append(points, point)
 	}
-	return
+
+	return points, nil
 }
