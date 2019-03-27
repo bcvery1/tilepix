@@ -30,7 +30,7 @@ type Map struct {
 	TileHeight   int            `xml:"tileheight,attr"`
 	Properties   []*Property    `xml:"properties>property"`
 	Tilesets     []*Tileset     `xml:"tileset"`
-	Layers       []*Layer       `xml:"layer"`
+	Layers       []*TileLayer   `xml:"layer"`
 	ObjectGroups []*ObjectGroup `xml:"objectgroup"`
 	Infinite     bool           `xml:"infinite,attr"`
 	ImageLayers  []*ImageLayer  `xml:"imagelayer"`
@@ -81,8 +81,8 @@ func (m *Map) GetImageLayerByName(name string) *ImageLayer {
 	return nil
 }
 
-// GetLayerByName returns a Map's Layer by its name
-func (m *Map) GetLayerByName(name string) *Layer {
+// GetLayerByName returns a Map's TileLayer by its name
+func (m *Map) GetLayerByName(name string) *TileLayer {
 	for _, l := range m.Layers {
 		if l.Name == name {
 			return l

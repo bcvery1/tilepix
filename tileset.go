@@ -61,7 +61,7 @@ func (ts *Tileset) setParent(m *Map) {
 	}
 }
 
-func getTileset(l *Layer) (tileset *Tileset, isEmpty, usesMultipleTilesets bool) {
+func getTileset(l *TileLayer) (tileset *Tileset, isEmpty, usesMultipleTilesets bool) {
 	for _, tile := range l.DecodedTiles {
 		if !tile.Nil {
 			if tileset == nil {
