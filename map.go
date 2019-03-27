@@ -81,9 +81,9 @@ func (m *Map) GetImageLayerByName(name string) *ImageLayer {
 	return nil
 }
 
-// GetLayerByName returns a Map's TileLayer by its name
-func (m *Map) GetLayerByName(name string) *TileLayer {
-	for _, l := range m.TileLayers {
+// GetObjectLayerByName returns a Map's ObjectGroup by its name
+func (m *Map) GetObjectLayerByName(name string) *ObjectGroup {
+	for _, l := range m.ObjectGroups {
 		if l.Name == name {
 			return l
 		}
@@ -91,9 +91,9 @@ func (m *Map) GetLayerByName(name string) *TileLayer {
 	return nil
 }
 
-// GetObjectLayerByName returns a Map's ObjectGroup by its name
-func (m *Map) GetObjectLayerByName(name string) *ObjectGroup {
-	for _, l := range m.ObjectGroups {
+// GetTileLayerByName returns a Map's TileLayer by its name
+func (m *Map) GetTileLayerByName(name string) *TileLayer {
+	for _, l := range m.TileLayers {
 		if l.Name == name {
 			return l
 		}
