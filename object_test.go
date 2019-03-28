@@ -113,6 +113,45 @@ func TestObject_GetRect(t *testing.T) {
 	}
 }
 
+func TestObject_GetPolygon(t *testing.T) {
+	m, err := tilepix.ReadFile("testdata/poly.tmx")
+	if err != nil {
+		t.Fatal(err)
+	}
+
+	o := m.GetObjectLayerByName("Object Layer 1").Objects[0]
+
+	tests := []struct {
+		name    string
+		object  *tilepix.Object
+		want    []pixel.Vec
+		wantErr bool
+	}{
+		{
+			name:   "getting polygon",
+			object: o,
+			want: []pixel.Vec{
+				pixel.V(0, 256),
+				pixel.V(2, 165),
+				pixel.V(100, 202),
+			},
+			wantErr: false,
+		},
+	}
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			got, err := o.GetPolygon()
+			if (err != nil) != tt.wantErr {
+				t.Errorf("Object.GetPolygon() error = %v, wantErr %v", err, tt.wantErr)
+				return
+			}
+			if !reflect.DeepEqual(got, tt.want) {
+				t.Errorf("Object.GetPolygon() = %v, want %v", got, tt.want)
+			}
+		})
+	}
+}
+
 func TestObjectProperties(t *testing.T) {
 	m, err := tilepix.ReadFile("testdata/poly.tmx")
 	if err != nil {
