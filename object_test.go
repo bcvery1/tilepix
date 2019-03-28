@@ -151,6 +151,46 @@ func TestObject_GetPolygon(t *testing.T) {
 		})
 	}
 }
+func TestObject_GetPolyLine(t *testing.T) {
+	m, err := tilepix.ReadFile("testdata/poly.tmx")
+	if err != nil {
+		t.Fatal(err)
+	}
+
+	o := m.GetObjectLayerByName("Object Layer 1").Objects[1]
+
+	tests := []struct {
+		name    string
+		object  *tilepix.Object
+		want    []pixel.Vec
+		wantErr bool
+	}{
+		{
+			name:   "getting polyline",
+			object: o,
+			want: []pixel.Vec{
+				pixel.V(0, 256),
+				pixel.V(-46, 202),
+				pixel.V(-1, 179),
+				pixel.V(-43, 142),
+				pixel.V(5, 102),
+			},
+			wantErr: false,
+		},
+	}
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			got, err := o.GetPolyLine()
+			if (err != nil) != tt.wantErr {
+				t.Errorf("Object.GetPolyLine() error = %v, wantErr %v", err, tt.wantErr)
+				return
+			}
+			if !reflect.DeepEqual(got, tt.want) {
+				t.Errorf("Object.GetPolyLine() = %v, want %v", got, tt.want)
+			}
+		})
+	}
+}
 
 func TestObjectProperties(t *testing.T) {
 	m, err := tilepix.ReadFile("testdata/poly.tmx")
