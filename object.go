@@ -105,6 +105,28 @@ func (o *Object) GetPolygon() ([]pixel.Vec, error) {
 	return pixelPoints, nil
 }
 
+// GetPolyLine will return a pixel.Vec slice representation of this object relative to the map (the co-ordinates will match
+// those as drawn in Tiled).  If the object type is not `PolylineObj` this function will return `nil` and an error.
+func (o *Object) GetPolyLine() ([]pixel.Vec, error) {
+	if o.GetType() != PolylineObj {
+		log.WithError(ErrInvalidObjectType).WithField("Object type", o.GetType()).Error("Object.GetPolyLine: object type mismatch")
+		return nil, ErrInvalidObjectType
+	}
+
+	points, err := o.PolyLine.Decode()
+	if err != nil {
+		log.WithError(err).Error("Object.GetPolyLine: could not decode Polyline")
+		return nil, err
+	}
+
+	var pixelPoints []pixel.Vec
+	for _, p := range points {
+		pixelPoints = append(pixelPoints, p.V())
+	}
+
+	return pixelPoints, nil
+}
+
 // GetType will return the ObjectType constant type of this object.
 func (o *Object) GetType() ObjectType {
 	return o.objectType
