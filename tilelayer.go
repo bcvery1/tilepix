@@ -32,7 +32,9 @@ type TileLayer struct {
 	// Empty should be set when all entries of the layer are NilTile.
 	Empty bool
 
-	batch *pixel.Batch
+	batch   *pixel.Batch
+	isDirty bool
+	static  bool
 
 	// parentMap is the map which contains this object
 	parentMap *Map
@@ -66,22 +68,48 @@ func (l *TileLayer) Batch() (*pixel.Batch, error) {
 
 // Draw will use the TileLayers' batch to draw all tiles within the TileLayer to the target.
 func (l *TileLayer) Draw(target pixel.Target) error {
-	// Initialise the batch
-	if _, err := l.Batch(); err != nil {
-		log.WithError(err).Error("TileLayer.Draw: could not get batch")
-		return err
-	}
+	// Only draw if the layer is dirty.
+	if l.isDirty {
+		// Initialise the batch
+		if _, err := l.Batch(); err != nil {
+			log.WithError(err).Error("TileLayer.Draw: could not get batch")
+			return err
+		}
 
-	ts := l.Tileset
-	numRows := ts.Tilecount / ts.Columns
+		ts := l.Tileset
+		numRows := ts.Tilecount / ts.Columns
 
-	// Loop through each decoded tile
-	for tileIndex, tile := range l.DecodedTiles {
-		tile.Draw(tileIndex, ts.Columns, numRows, ts, l.batch)
+		// Loop through each decoded tile
+		for tileIndex, tile := range l.DecodedTiles {
+			tile.Draw(tileIndex, ts.Columns, numRows, ts, l.batch)
+		}
+
+		// Batch is drawn to, layer is no longer dirty.
+		l.SetDirty(false)
 	}
 
 	l.batch.Draw(target)
+
+	// Reset the dirty flag if the layer is not static
+	if !l.static {
+		l.SetDirty(true)
+	}
+
 	return nil
+}
+
+// SetDirty will update the TileLayers' `dirty` property.  If true, this will cause the TileLayers' batch be cleared and
+// re-drawn next time `TileLayer.Draw` is called.
+func (l *TileLayer) SetDirty(newVal bool) {
+	log.WithField("Dirty", newVal).Trace("TileLayer.SetDirty: setting dirty property")
+	l.isDirty = newVal
+}
+
+// SetStatic will update the TileLayers' `static` property.  If false, this will set the dirty property to true each
+// time after `TileLayer.Draw` is called, so that the layer is drawn everytime.
+func (l *TileLayer) SetStatic(newVal bool) {
+	log.WithField("Static", newVal).Debug("TileLayer.SetStatic: setting static property")
+	l.static = newVal
 }
 
 func (l *TileLayer) String() string {
@@ -90,6 +118,9 @@ func (l *TileLayer) String() string {
 
 func (l *TileLayer) decode(width, height int) ([]GID, error) {
 	log.WithField("Encoding", l.Data.Encoding).Debug("TileLayer.decode: determining encoding")
+
+	l.SetStatic(true)
+	l.SetDirty(true)
 
 	switch l.Data.Encoding {
 	case "csv":
