@@ -5,6 +5,7 @@ import (
 	"testing"
 
 	"github.com/bcvery1/tilepix"
+
 	log "github.com/sirupsen/logrus"
 )
 

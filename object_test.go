@@ -4,6 +4,9 @@ import (
 	"reflect"
 	"testing"
 
+	// Required to decode PNG for object tile testing
+	_ "image/png"
+
 	"github.com/bcvery1/tilepix"
 	"github.com/faiface/pixel"
 )
@@ -151,6 +154,7 @@ func TestObject_GetPolygon(t *testing.T) {
 		})
 	}
 }
+
 func TestObject_GetPolyLine(t *testing.T) {
 	m, err := tilepix.ReadFile("testdata/poly.tmx")
 	if err != nil {
@@ -206,4 +210,45 @@ func TestObjectProperties(t *testing.T) {
 		}
 	}
 	t.Fatal("No property found")
+}
+
+func TestObject_GetTile(t *testing.T) {
+	m, err := tilepix.ReadFile("testdata/tileobject.tmx")
+	if err != nil {
+		t.Fatal(err)
+	}
+
+	o := m.GetObjectLayerByName("Object Layer 1").Objects[0]
+
+	tests := []struct {
+		name    string
+		object  *tilepix.Object
+		want    *tilepix.DecodedTile
+		wantErr bool
+	}{
+		{
+			name:   "getting tile",
+			object: o,
+			want: &tilepix.DecodedTile{
+				ID: 1,
+			},
+			wantErr: false,
+		},
+	}
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			got, err := o.GetTile()
+			if (err != nil) != tt.wantErr {
+				t.Errorf("Object.GetTile() error = %v, wantErr %v", err, tt.wantErr)
+				return
+			}
+			if got.ID != tt.want.ID ||
+				got.HorizontalFlip != tt.want.HorizontalFlip ||
+				got.VerticalFlip != tt.want.VerticalFlip ||
+				got.DiagonalFlip != tt.want.DiagonalFlip ||
+				got.Nil != tt.want.Nil {
+				t.Errorf("Object.GetTile() = %v, want %v", got, tt.want)
+			}
+		})
+	}
 }

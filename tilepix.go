@@ -40,6 +40,8 @@ func (o ObjectType) String() string {
 		return "Rectangle"
 	case PointObj:
 		return "Point"
+	case TileObj:
+		return "Tile"
 	}
 
 	return "Unknown"
@@ -52,6 +54,7 @@ const (
 	PolylineObj
 	RectangleObj
 	PointObj
+	TileObj
 )
 
 // Errors which are returned from various places in the package.
@@ -120,6 +123,11 @@ func Read(r io.Reader) (*Map, error) {
 	log.WithField("Object layer count", len(m.ObjectGroups)).Debug("Read: processing object layers")
 	for _, og := range m.ObjectGroups {
 		og.flipY()
+	}
+
+	log.WithField("Tileset count", len(m.Tilesets)).Debug("Read: processing tilesets")
+	for _, ts := range m.Tilesets {
+		ts.setSprite()
 	}
 
 	return m, nil
