@@ -162,6 +162,11 @@ func (o *Object) hydrateType() {
 		return
 	}
 
+	if o.GID != 0 {
+		o.objectType = TileObj
+		return
+	}
+
 	o.objectType = RectangleObj
 }
 
