@@ -37,7 +37,8 @@ func (im *ImageLayer) Draw(target pixel.Target, mat pixel.Matrix) error {
 	}
 
 	// Shift image right-down by half its' dimensions.
-	mat = mat.Moved(pixel.V(float64(im.Image.Width/2), float64(im.Image.Height/-2)))
+	// Shift image by layer offset.
+	mat = mat.Moved(pixel.V(float64(im.Image.Width/2), float64(im.Image.Height/-2))).Moved(pixel.V(im.OffSetX, -im.OffSetY))
 
 	im.Image.sprite.Draw(target, mat)
 	return nil
