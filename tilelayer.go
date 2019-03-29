@@ -53,12 +53,7 @@ func (l *TileLayer) Batch() (*pixel.Batch, error) {
 			return nil, err
 		}
 
-		_, pictureData, err := loadSpriteFromFile(l.Tileset.Image.Source)
-		if err != nil {
-			log.WithError(err).Error("TileLayer.Batch: could not load sprite from file")
-			return nil, err
-		}
-
+		pictureData := l.Tileset.setSprite()
 		l.batch = pixel.NewBatch(&pixel.TrianglesData{}, pictureData)
 	}
 

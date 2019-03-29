@@ -30,7 +30,8 @@ type Tileset struct {
 	Tilecount  int         `xml:"tilecount,attr"`
 	Columns    int         `xml:"columns,attr"`
 
-	sprite *pixel.Sprite
+	sprite  *pixel.Sprite
+	picture pixel.Picture
 
 	// parentMap is the map which contains this object
 	parentMap *Map
@@ -63,19 +64,21 @@ func (ts *Tileset) setParent(m *Map) {
 	}
 }
 
-func (ts *Tileset) setSprite() {
+func (ts *Tileset) setSprite() pixel.Picture {
 	if ts.sprite != nil {
 		// Return if sprite already set
-		return
+		return ts.picture
 	}
 
-	sprite, _, err := loadSpriteFromFile(ts.Image.Source)
+	sprite, pictureData, err := loadSpriteFromFile(ts.Image.Source)
 	if err != nil {
 		log.WithError(err).Error("Tileset.setSprite: could not load sprite from file")
-		return
+		return nil
 	}
 
 	ts.sprite = sprite
+	ts.picture = pictureData
+	return ts.picture
 }
 
 func getTileset(l *TileLayer) (tileset *Tileset, isEmpty, usesMultipleTilesets bool) {
