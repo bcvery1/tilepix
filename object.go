@@ -24,7 +24,8 @@ type Object struct {
 	Y          float64     `xml:"y,attr"`
 	Width      float64     `xml:"width,attr"`
 	Height     float64     `xml:"height,attr"`
-	GID        ID          `xml:"id,attr"`
+	GID        ID          `xml:"gid,attr"`
+	ID         ID          `xml:"id,attr"`
 	Visible    bool        `xml:"visible,attr"`
 	Polygon    *Polygon    `xml:"polygon"`
 	PolyLine   *PolyLine   `xml:"polyline"`
