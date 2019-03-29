@@ -4,6 +4,8 @@ import (
 	"fmt"
 
 	"github.com/faiface/pixel"
+
+	log "github.com/sirupsen/logrus"
 )
 
 /*
@@ -59,6 +61,21 @@ func (ts *Tileset) setParent(m *Map) {
 	if ts.Image != nil {
 		ts.Image.setParent(m)
 	}
+}
+
+func (ts *Tileset) setSprite() {
+	if ts.sprite != nil {
+		// Return if sprite already set
+		return
+	}
+
+	sprite, _, err := loadSpriteFromFile(ts.Image.Source)
+	if err != nil {
+		log.WithError(err).Error("Tileset.setSprite: could not load sprite from file")
+		return
+	}
+
+	ts.sprite = sprite
 }
 
 func getTileset(l *TileLayer) (tileset *Tileset, isEmpty, usesMultipleTilesets bool) {

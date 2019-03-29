@@ -125,6 +125,11 @@ func Read(r io.Reader) (*Map, error) {
 		og.flipY()
 	}
 
+	log.WithField("Tileset count", len(m.Tilesets)).Debug("Read: processing tilesets")
+	for _, ts := range m.Tilesets {
+		ts.setSprite()
+	}
+
 	return m, nil
 }
 
