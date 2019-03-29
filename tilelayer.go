@@ -21,6 +21,8 @@ import (
 type TileLayer struct {
 	Name       string      `xml:"name,attr"`
 	Opacity    float32     `xml:"opacity,attr"`
+	OffSetX    float64     `xml:"offsetx,attr"`
+	OffSetY    float64     `xml:"offsety,attr"`
 	Visible    bool        `xml:"visible,attr"`
 	Properties []*Property `xml:"properties>property"`
 	Data       Data        `xml:"data"`
