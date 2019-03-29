@@ -31,7 +31,12 @@ func (og *ObjectGroup) String() string {
 
 func (og *ObjectGroup) decode() error {
 	for _, o := range og.Objects {
+		// Have the object decode its' type
 		o.hydrateType()
+
+		// Set the x,y offsets of the layer onto the object
+		o.X += og.OffSetX
+		o.Y -= og.OffSetY
 	}
 
 	return nil
