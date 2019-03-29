@@ -52,7 +52,7 @@ type DecodedTile struct {
 
 // Draw will draw the tile to the target provided.  This will calculate the sprite from the provided tileset and set the
 // DecodedTiles' internal `sprite` property; this is so it is only calculated the first time.
-func (t *DecodedTile) Draw(ind, columns, numRows int, ts *Tileset, target pixel.Target) {
+func (t *DecodedTile) Draw(ind, columns, numRows int, ts *Tileset, target pixel.Target, offset pixel.Vec) {
 	if t.IsNil() {
 		return
 	}
@@ -70,7 +70,7 @@ func (t *DecodedTile) Draw(ind, columns, numRows int, ts *Tileset, target pixel.
 		t.sprite = pixel.NewSprite(ts.sprite.Picture(), pixel.R(iX, iY, fX, fY))
 		t.pos = gamePos.ScaledXY(pixel.V(float64(ts.TileWidth), float64(ts.TileHeight))).Add(pixel.V(float64(ts.TileWidth), float64(ts.TileHeight)).Scaled(0.5))
 	}
-	t.sprite.Draw(target, pixel.IM.Moved(t.pos))
+	t.sprite.Draw(target, pixel.IM.Moved(t.pos.Add(offset)))
 }
 
 func (t *DecodedTile) String() string {

@@ -83,7 +83,10 @@ func (l *TileLayer) Draw(target pixel.Target) error {
 
 		// Loop through each decoded tile
 		for tileIndex, tile := range l.DecodedTiles {
-			tile.Draw(tileIndex, ts.Columns, numRows, ts, l.batch)
+			// The Y component of the offset is set in Tiled from top down, setting here to negative because we want
+			// from the bottom up.
+			layerOffset := pixel.V(l.OffSetX, -l.OffSetY)
+			tile.Draw(tileIndex, ts.Columns, numRows, ts, l.batch, layerOffset)
 		}
 
 		// Batch is drawn to, layer is no longer dirty.
