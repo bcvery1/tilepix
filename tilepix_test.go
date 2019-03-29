@@ -1,15 +1,13 @@
 package tilepix_test
 
 import (
-	"io/ioutil"
 	"testing"
 
 	"github.com/bcvery1/tilepix"
-	log "github.com/sirupsen/logrus"
 )
 
 func init() {
-	log.SetOutput(ioutil.Discard)
+	// log.SetOutput(ioutil.Discard)
 }
 
 func TestReadFile(t *testing.T) {

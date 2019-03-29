@@ -24,7 +24,7 @@ type Object struct {
 	Y          float64     `xml:"y,attr"`
 	Width      float64     `xml:"width,attr"`
 	Height     float64     `xml:"height,attr"`
-	GID        int         `xml:"id,attr"`
+	GID        ID          `xml:"id,attr"`
 	Visible    bool        `xml:"visible,attr"`
 	Polygon    *Polygon    `xml:"polygon"`
 	PolyLine   *PolyLine   `xml:"polyline"`
@@ -33,6 +33,7 @@ type Object struct {
 	Point      *struct{}   `xml:"point"`
 
 	objectType ObjectType
+	tile       *DecodedTile
 
 	// parentMap is the map which contains this object
 	parentMap *Map
@@ -125,6 +126,31 @@ func (o *Object) GetPolyLine() ([]pixel.Vec, error) {
 	}
 
 	return pixelPoints, nil
+}
+
+func (o *Object) GetTile() (*DecodedTile, error) {
+	if o.GetType() != TileObj {
+		log.WithError(ErrInvalidObjectType).WithField("Object type", o.GetType()).Error("Object.GetTile: object type mismatch")
+		return nil, ErrInvalidObjectType
+	}
+
+	if o.tile == nil {
+		// Setting tileset to the first tileset in the map.  Will need updating when dealing with multiple
+		// tilesets.
+		ts := o.parentMap.Tilesets[0]
+
+		o.tile = &DecodedTile{
+			ID:        o.GID,
+			Tileset:   ts,
+			pos:       pixel.V(o.X, o.Y),
+			parentMap: o.parentMap,
+		}
+
+		numRows := ts.Tilecount / ts.Columns
+		o.tile.setSprite(ts.Columns, numRows, ts)
+	}
+
+	return o.tile, nil
 }
 
 // GetType will return the ObjectType constant type of this object.

@@ -40,6 +40,8 @@ func (o ObjectType) String() string {
 		return "Rectangle"
 	case PointObj:
 		return "Point"
+	case TileObj:
+		return "Tile"
 	}
 
 	return "Unknown"
