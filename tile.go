@@ -58,16 +58,10 @@ func (t *DecodedTile) Draw(ind, columns, numRows int, ts *Tileset, target pixel.
 	}
 
 	if t.sprite == nil {
+		t.setSprite(columns, numRows, ts)
+
 		// Calculate the framing for the tile within its tileset's source image
-		x, y := tileIDToCoord(t.ID, columns, numRows)
 		gamePos := indexToGamePos(ind, t.parentMap.Width, t.parentMap.Height)
-
-		iX := float64(x) * float64(ts.TileWidth)
-		fX := iX + float64(ts.TileWidth)
-		iY := float64(y) * float64(ts.TileHeight)
-		fY := iY + float64(ts.TileHeight)
-
-		t.sprite = pixel.NewSprite(ts.sprite.Picture(), pixel.R(iX, iY, fX, fY))
 		t.pos = gamePos.ScaledXY(pixel.V(float64(ts.TileWidth), float64(ts.TileHeight))).Add(pixel.V(float64(ts.TileWidth), float64(ts.TileHeight)).Scaled(0.5))
 	}
 	t.sprite.Draw(target, pixel.IM.Moved(t.pos.Add(offset)))
@@ -85,4 +79,22 @@ func (t *DecodedTile) IsNil() bool {
 
 func (t *DecodedTile) setParent(m *Map) {
 	t.parentMap = m
+}
+
+func (t *DecodedTile) setSprite(columns, numRows int, ts *Tileset) {
+	if t.IsNil() {
+		return
+	}
+
+	if t.sprite == nil {
+		// Calculate the framing for the tile within its tileset's source image
+		x, y := tileIDToCoord(t.ID, columns, numRows)
+
+		iX := float64(x) * float64(ts.TileWidth)
+		fX := iX + float64(ts.TileWidth)
+		iY := float64(y) * float64(ts.TileHeight)
+		fY := iY + float64(ts.TileHeight)
+
+		t.sprite = pixel.NewSprite(ts.sprite.Picture(), pixel.R(iX, iY, fX, fY))
+	}
 }
