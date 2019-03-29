@@ -52,6 +52,7 @@ const (
 	PolylineObj
 	RectangleObj
 	PointObj
+	TileObj
 )
 
 // Errors which are returned from various places in the package.
