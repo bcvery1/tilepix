@@ -101,9 +101,9 @@ func (m *Map) GetTileLayerByName(name string) *TileLayer {
 	return nil
 }
 
-// GetObjectByName returns a Map's Object by its name
+// GetObjectByName returns the Maps' Objects by their name
 func (m *Map) GetObjectByName(name string) []*Object {
-	objs := make([]*Object, 0)
+	var objs []*Object
 
 	for _, og := range m.ObjectGroups {
 		objs = append(objs, og.GetObjectByName(name)...)

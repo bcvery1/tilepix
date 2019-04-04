@@ -42,9 +42,9 @@ func (og *ObjectGroup) decode() error {
 	return nil
 }
 
-// GetObjectByName returns a Map's Object by its name
+// GetObjectByName returns the ObjectGroups' Objects by their name
 func (og *ObjectGroup) GetObjectByName(name string) []*Object {
-	objs := make([]*Object, 0)
+	var objs []*Object
 
 	for _, o := range og.Objects {
 		if o.Name == name {

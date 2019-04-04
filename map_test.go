@@ -34,6 +34,9 @@ func TestGetObjectByName(t *testing.T) {
 		t.Fatal(err)
 	}
 	objs := m.GetObjectByName("Polygon")
+	if len(objs) != 1 {
+		t.Error("error get object by name")
+	}
 	for _, obj := range objs {
 		if obj.Name != "Polygon" {
 			t.Error("error get object by name")
