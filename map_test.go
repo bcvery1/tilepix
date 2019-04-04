@@ -27,3 +27,16 @@ func TestGetObjectLayerByName(t *testing.T) {
 		t.Error("error get object layer")
 	}
 }
+
+func TestGetObjectByName(t *testing.T) {
+	m, err := tilepix.ReadFile("testdata/poly.tmx")
+	if err != nil {
+		t.Fatal(err)
+	}
+	objs := m.GetObjectByName("Polygon")
+	for _, obj := range objs {
+		if obj.Name != "Polygon" {
+			t.Error("error get object by name")
+		}
+	}
+}

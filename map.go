@@ -101,6 +101,16 @@ func (m *Map) GetTileLayerByName(name string) *TileLayer {
 	return nil
 }
 
+// GetObjectByName returns a Map's Object by its name
+func (m *Map) GetObjectByName(name string) []*Object {
+	objs := make([]*Object, 0)
+
+	for _, og := range m.ObjectGroups {
+		objs = append(objs, og.GetObjectByName(name)...)
+	}
+	return objs
+}
+
 func (m *Map) String() string {
 	return fmt.Sprintf(
 		"Map{Version: %s, Tile dimensions: %dx%d, Properties: %v, Tilesets: %v, TileLayers: %v, Object layers: %v, Image layers: %v}",

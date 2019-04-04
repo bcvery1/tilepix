@@ -42,6 +42,18 @@ func (og *ObjectGroup) decode() error {
 	return nil
 }
 
+// GetObjectByName returns a Map's Object by its name
+func (og *ObjectGroup) GetObjectByName(name string) []*Object {
+	objs := make([]*Object, 0)
+
+	for _, o := range og.Objects {
+		if o.Name == name {
+			objs = append(objs, o)
+		}
+	}
+	return objs
+}
+
 func (og *ObjectGroup) flipY() {
 	for _, o := range og.Objects {
 		o.flipY()
