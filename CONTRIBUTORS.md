@@ -21,4 +21,5 @@ Ben @bcvery1
 ## Contributors
  - Andrea Manzini @ilmanzo
  - Y.Horie @u5surf
+ - Thomas Lacroix @TooHTooH
 
