@@ -4,6 +4,8 @@ import (
 	"image/color"
 	"testing"
 
+	_ "image/png"
+
 	"github.com/bcvery1/tilepix"
 	"github.com/faiface/pixel"
 	"github.com/faiface/pixel/pixelgl"
