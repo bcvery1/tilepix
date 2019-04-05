@@ -130,7 +130,7 @@ func (m *Map) Bounds() pixel.Rect {
 	return pixel.R(0, 0, m.pixelWidth(), m.pixelHeight())
 }
 
-// Centre will return a pixel vector reprensenting the center of the bounds
+// Centre will return a pixel vector reprensenting the center of the bounds.
 func (m *Map) Centre() pixel.Vec {
 	return m.Bounds().Center()
 }
