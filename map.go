@@ -47,7 +47,7 @@ type Map struct {
 // - mat - The matrix to draw the canvas to the target with.
 func (m *Map) DrawAll(target pixel.Target, clearColour color.Color, mat pixel.Matrix) error {
 	if m.canvas == nil {
-		m.canvas = pixelgl.NewCanvas(m.bounds())
+		m.canvas = pixelgl.NewCanvas(m.Bounds())
 	}
 	m.canvas.Clear(clearColour)
 
@@ -66,7 +66,7 @@ func (m *Map) DrawAll(target pixel.Target, clearColour color.Color, mat pixel.Ma
 		}
 	}
 
-	m.canvas.Draw(target, mat.Moved(m.bounds().Center()))
+	m.canvas.Draw(target, mat.Moved(m.Bounds().Center()))
 
 	return nil
 }
@@ -125,9 +125,14 @@ func (m *Map) String() string {
 	)
 }
 
-// bounds will return a pixel rectangle representing the width-height in pixels.
-func (m *Map) bounds() pixel.Rect {
+// Bounds will return a pixel rectangle representing the width-height in pixels.
+func (m *Map) Bounds() pixel.Rect {
 	return pixel.R(0, 0, m.pixelWidth(), m.pixelHeight())
+}
+
+// Centre will return a pixel vector reprensenting the center of the bounds.
+func (m *Map) Centre() pixel.Vec {
+	return m.Bounds().Center()
 }
 
 func (m *Map) pixelWidth() float64 {
