@@ -15,19 +15,19 @@ addons:
       - libopenal-dev
       - libasound2-dev
       - libgl1-mesa-dev
+      - xvfb
 go:
   - tip
   - 1.12.x
   - 1.11.x
 
-services:
-  - xvfb
-
 env:
   global:
     - GO111MODULE=on
 
-install: true
+install:
+  - export DISPLAY=':99.0'
+  - Xvfb :99 -screen 0 1920x1080x24 > /dev/null 2&>1 &
 
 script:
   - go test -v -cover -race ./...
