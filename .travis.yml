@@ -20,6 +20,9 @@ go:
   - 1.12.x
   - 1.11.x
 
+services:
+  - xvfb
+
 env:
   global:
     - GO111MODULE=on
