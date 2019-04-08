@@ -1,6 +1,17 @@
 language: go
 sudo: false
-
+# The follow addons are a requirement for the pixel library
+addons:
+  apt:
+    packages:
+      - xorg-dev
+      - libx11-dev
+      - libxrandr-dev
+      - libxinerama-dev
+      - libxcursor-dev
+      - libxi-dev
+      - libopenal-dev
+      - libasound2-dev
 go:
   - tip
   - 1.12.x
@@ -13,5 +24,4 @@ env:
 install: true
 
 script:
-  - CGO_ENABLED=0 go test -v ./...
   - go test -v -cover -race ./...
