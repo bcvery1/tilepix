@@ -14,7 +14,7 @@ addons:
       - libxi-dev
       - libopenal-dev
       - libasound2-dev
-      - ibgl1-mesa-dev
+      - libgl1-mesa-dev
 go:
   - tip
   - 1.12.x
