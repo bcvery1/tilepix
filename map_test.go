@@ -2,6 +2,7 @@ package tilepix_test
 
 import (
 	"image/color"
+	"os"
 	"testing"
 
 	_ "image/png"
@@ -10,6 +11,12 @@ import (
 	"github.com/faiface/pixel"
 	"github.com/faiface/pixel/pixelgl"
 )
+
+func TestMain(m *testing.M) {
+	pixelgl.Run(func() {
+		os.Exit(m.Run())
+	})
+}
 
 func TestGetLayerByName(t *testing.T) {
 	m, err := tilepix.ReadFile("testdata/poly.tmx")
@@ -74,5 +81,21 @@ func TestCentre(t *testing.T) {
 	}
 	if centre.Y != 128 {
 		t.Error("error centre Y invalid")
+	}
+}
+
+func TestMap_DrawAll(t *testing.T) {
+	m, err := tilepix.ReadFile("examples/t1.tmx")
+	if err != nil {
+		t.Fatalf("Could not create TilePix map: %v", err)
+	}
+
+	target, err := pixelgl.NewWindow(pixelgl.WindowConfig{Bounds:pixel.R(0, 0, 100, 100)})
+	if err != nil {
+		t.Fatal(err)
+	}
+
+	if err := m.DrawAll(target, color.Transparent, pixel.IM); err != nil {
+		t.Fatalf("Could not draw map: %v", err)
 	}
 }
