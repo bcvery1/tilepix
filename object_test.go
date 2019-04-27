@@ -242,6 +242,11 @@ func TestObject_GetTile(t *testing.T) {
 				t.Errorf("Object.GetTile() error = %v, wantErr %v", err, tt.wantErr)
 				return
 			}
+
+			if err != nil {
+				return
+			}
+
 			if got.ID != tt.want.ID ||
 				got.HorizontalFlip != tt.want.HorizontalFlip ||
 				got.VerticalFlip != tt.want.VerticalFlip ||

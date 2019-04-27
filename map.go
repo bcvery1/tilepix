@@ -36,6 +36,8 @@ type Map struct {
 	ImageLayers  []*ImageLayer  `xml:"imagelayer"`
 
 	canvas *pixelgl.Canvas
+	// dir is the directory the tmx file is located in.  This is used to access images for tilesets via a relative path.
+	dir string
 }
 
 // DrawAll will draw all tile layers and image layers to the target.

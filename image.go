@@ -2,6 +2,7 @@ package tilepix
 
 import (
 	"fmt"
+	"path/filepath"
 
 	"github.com/faiface/pixel"
 
@@ -41,7 +42,7 @@ func (i *Image) initSprite() error {
 
 	log.WithFields(log.Fields{"Path": i.Source, "Width": i.Width, "Height": i.Height}).Debug("Image.initSprite: loading sprite")
 
-	sprite, pictureData, err := loadSpriteFromFile(i.Source)
+	sprite, pictureData, err := loadSpriteFromFile(filepath.Join(i.parentMap.dir, i.Source))
 	if err != nil {
 		log.WithError(err).Error("Image.initSprite: could not load sprite from file")
 		return err

@@ -14,6 +14,7 @@ import (
 	"errors"
 	"io"
 	"os"
+	"path/filepath"
 
 	log "github.com/sirupsen/logrus"
 )
@@ -85,7 +86,7 @@ type DataTile struct {
 }
 
 // Read will read, decode and initialise a Tiled Map from a data reader.
-func Read(r io.Reader) (*Map, error) {
+func Read(r io.Reader, dir string) (*Map, error) {
 	log.Debug("Read: reading from io.Reader")
 
 	d := xml.NewDecoder(r)
@@ -95,6 +96,8 @@ func Read(r io.Reader) (*Map, error) {
 		log.WithError(err).Error("Read: could not decode to Map")
 		return nil, err
 	}
+
+	m.dir = dir
 
 	if m.Infinite {
 		log.WithError(ErrInfiniteMap).Error("Read: map has attribute 'infinite=true', not supported")
@@ -144,5 +147,7 @@ func ReadFile(filePath string) (*Map, error) {
 	}
 	defer f.Close()
 
-	return Read(f)
+	dir := filepath.Dir(filePath)
+
+	return Read(f, dir)
 }

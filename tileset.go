@@ -2,6 +2,7 @@ package tilepix
 
 import (
 	"fmt"
+	"path/filepath"
 
 	"github.com/faiface/pixel"
 
@@ -70,7 +71,7 @@ func (ts *Tileset) setSprite() pixel.Picture {
 		return ts.picture
 	}
 
-	sprite, pictureData, err := loadSpriteFromFile(ts.Image.Source)
+	sprite, pictureData, err := loadSpriteFromFile(filepath.Join(ts.parentMap.dir, ts.Image.Source))
 	if err != nil {
 		log.WithError(err).Error("Tileset.setSprite: could not load sprite from file")
 		return nil
