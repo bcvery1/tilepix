@@ -89,9 +89,9 @@ func (t *DecodedTile) setSprite(columns, numRows int, ts *Tileset) {
 	if t.sprite == nil {
 		// Calculate the framing for the tile within its tileset's source image
 		x, y := tileIDToCoord(t.ID, columns, numRows)
-		iX := float64(x)*float64(ts.TileWidth) + float64(ts.Margin+ts.Spacing*x-1)
+		iX := float64(x)*float64(ts.TileWidth) + float64(ts.Margin+ts.Spacing*(x-1))
 		fX := iX + float64(ts.TileWidth)
-		iY := float64(y)*float64(ts.TileHeight) + float64(ts.Margin+ts.Spacing*y-1)
+		iY := float64(y)*float64(ts.TileHeight) + float64(ts.Margin+ts.Spacing*(y-1))
 		fY := iY + float64(ts.TileHeight)
 
 		t.sprite = pixel.NewSprite(ts.sprite.Picture(), pixel.R(iX, iY, fX, fY))
