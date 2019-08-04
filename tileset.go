@@ -100,8 +100,6 @@ func (ts *Tileset) setSprite() pixel.Picture {
 		return ts.picture
 	}
 
-	log.Println("ts.parentMap, ts.Image:", ts.parentMap, ts.Image)
-
 	sprite, pictureData, err := loadSpriteFromFile(filepath.Join(ts.parentMap.dir, ts.Image.Source))
 	if err != nil {
 		log.WithError(err).Error("Tileset.setSprite: could not load sprite from file")
