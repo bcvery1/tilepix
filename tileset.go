@@ -7,6 +7,9 @@ import (
 	"github.com/faiface/pixel"
 
 	log "github.com/sirupsen/logrus"
+	"os"
+	"io"
+	"encoding/xml"
 )
 
 /*
@@ -36,6 +39,32 @@ type Tileset struct {
 
 	// parentMap is the map which contains this object
 	parentMap *Map
+}
+
+func readTileset(r io.Reader) (*Tileset, error) {
+	log.Debug("readTileset: reading from io.Reader")
+
+	d := xml.NewDecoder(r)
+
+	t := new(Tileset)
+	if err := d.Decode(t); err != nil {
+		log.WithError(err).Error("readTileset: could not decode to Tileset")
+		return nil, err
+	}
+	return t, nil
+}
+
+func readTilesetFile(filePath string) (*Tileset, error) {
+	log.WithField("Filepath", filePath).Debug("readTilesetFile: reading file")
+
+	f, err := os.Open(filePath)
+	if err != nil {
+		log.WithError(err).Error("ReadFile: could not open file")
+		return nil, err
+	}
+	defer f.Close()
+
+	return readTileset(f)
 }
 
 func (ts *Tileset) String() string {
@@ -70,6 +99,8 @@ func (ts *Tileset) setSprite() pixel.Picture {
 		// Return if sprite already set
 		return ts.picture
 	}
+
+	log.Println("ts.parentMap, ts.Image:", ts.parentMap, ts.Image)
 
 	sprite, pictureData, err := loadSpriteFromFile(filepath.Join(ts.parentMap.dir, ts.Image.Source))
 	if err != nil {

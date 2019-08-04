@@ -104,6 +104,19 @@ func Read(r io.Reader, dir string) (*Map, error) {
 		return nil, ErrInfiniteMap
 	}
 
+	log.WithField("Tileset count", len(m.Tilesets)).Debug("Read: checking for tileset sources")
+	for i, ts := range m.Tilesets {
+		if ts.Source != "" {
+			sourceTs, err := readTilesetFile(filepath.Join(dir, ts.Source))
+			if err != nil {
+				log.WithError(err).Error("Read: could not read tileset source")
+				return nil, err
+			}
+			sourceTs.FirstGID = ts.FirstGID
+			m.Tilesets[i] = sourceTs
+		}
+	}
+
 	if err := m.decodeLayers(); err != nil {
 		log.WithError(err).Error("Read: could not decode layers")
 		return nil, err
