@@ -3,13 +3,13 @@ package tilepix
 import (
 	"fmt"
 	"path/filepath"
+	"io"
+	"os"
+	"encoding/xml"
 
 	"github.com/faiface/pixel"
 
 	log "github.com/sirupsen/logrus"
-	"os"
-	"io"
-	"encoding/xml"
 )
 
 /*
