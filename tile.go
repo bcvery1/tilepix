@@ -94,6 +94,6 @@ func (t *DecodedTile) setSprite(columns, numRows int, ts *Tileset) {
 		iY := float64(y)*float64(ts.TileHeight) + float64(ts.Margin+ts.Spacing*(y-1))
 		fY := iY + float64(ts.TileHeight)
 
-		t.sprite = pixel.NewSprite(ts.sprite.Picture(), pixel.R(iX, iY, fX, fY))
+		t.sprite = pixel.NewSprite(ts.setSprite(), pixel.R(iX, iY, fX, fY))
 	}
 }
