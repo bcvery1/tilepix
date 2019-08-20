@@ -1,11 +1,11 @@
 package tilepix
 
 import (
+	"encoding/xml"
 	"fmt"
-	"path/filepath"
 	"io"
 	"os"
-	"encoding/xml"
+	"path/filepath"
 
 	"github.com/faiface/pixel"
 
@@ -46,12 +46,12 @@ func readTileset(r io.Reader) (*Tileset, error) {
 
 	d := xml.NewDecoder(r)
 
-	t := new(Tileset)
-	if err := d.Decode(t); err != nil {
+	var t Tileset
+	if err := d.Decode(&t); err != nil {
 		log.WithError(err).Error("readTileset: could not decode to Tileset")
 		return nil, err
 	}
-	return t, nil
+	return &t, nil
 }
 
 func readTilesetFile(filePath string) (*Tileset, error) {
