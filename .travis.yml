@@ -15,6 +15,10 @@ addons:
       - libopenal-dev
       - libasound2-dev
       - libgl1-mesa-dev
+
+services:
+  - xvfb
+
 go:
   - tip
   - 1.12.x
