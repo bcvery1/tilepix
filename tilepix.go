@@ -89,10 +89,8 @@ type DataTile struct {
 func Read(r io.Reader, dir string) (*Map, error) {
 	log.Debug("Read: reading from io.Reader")
 
-	d := xml.NewDecoder(r)
-
-	m := new(Map)
-	if err := d.Decode(m); err != nil {
+	var m Map
+	if err := xml.NewDecoder(r).Decode(&m); err != nil {
 		log.WithError(err).Error("Read: could not decode to Map")
 		return nil, err
 	}
@@ -133,7 +131,7 @@ func Read(r io.Reader, dir string) (*Map, error) {
 		ts.setSprite()
 	}
 
-	return m, nil
+	return &m, nil
 }
 
 // ReadFile will read, decode and initialise a Tiled Map from a file path.
