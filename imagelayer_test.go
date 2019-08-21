@@ -2,10 +2,10 @@ package tilepix
 
 import "testing"
 
-func TestProperty_String(t *testing.T) {
+func TestImageLayer_String(t *testing.T) {
 	type fields struct {
 		Name  string
-		Value string
+		Image *Image
 	}
 	tests := []struct {
 		name   string
@@ -15,19 +15,23 @@ func TestProperty_String(t *testing.T) {
 		{
 			name: "Basic string",
 			fields: fields{
-				Name:  "name p",
-				Value: "value p",
+				Name: "name",
+				Image: &Image{
+					Source: "src",
+					Width:  120,
+					Height: 120,
+				},
 			},
-			want: "Property{name p: value p}",
+			want: "ImageLayer{Name: 'name', Image: Image{Source: src, Size: 120x120}}",
 		},
 	}
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
-			p := &Property{
+			im := &ImageLayer{
 				Name:  tt.fields.Name,
-				Value: tt.fields.Value,
+				Image: tt.fields.Image,
 			}
-			if got := p.String(); got != tt.want {
+			if got := im.String(); got != tt.want {
 				t.Errorf("String() = %v, want %v", got, tt.want)
 			}
 		})

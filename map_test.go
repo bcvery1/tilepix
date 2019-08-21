@@ -90,7 +90,7 @@ func TestMap_DrawAll(t *testing.T) {
 		t.Fatalf("Could not create TilePix map: %v", err)
 	}
 
-	target, err := pixelgl.NewWindow(pixelgl.WindowConfig{Bounds:pixel.R(0, 0, 100, 100)})
+	target, err := pixelgl.NewWindow(pixelgl.WindowConfig{Bounds: pixel.R(0, 0, 100, 100)})
 	if err != nil {
 		t.Fatal(err)
 	}

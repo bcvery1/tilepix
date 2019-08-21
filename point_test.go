@@ -2,10 +2,10 @@ package tilepix
 
 import "testing"
 
-func TestProperty_String(t *testing.T) {
+func TestPoint_String(t *testing.T) {
 	type fields struct {
-		Name  string
-		Value string
+		X int
+		Y int
 	}
 	tests := []struct {
 		name   string
@@ -15,17 +15,17 @@ func TestProperty_String(t *testing.T) {
 		{
 			name: "Basic string",
 			fields: fields{
-				Name:  "name p",
-				Value: "value p",
+				X: 1,
+				Y: 2,
 			},
-			want: "Property{name p: value p}",
+			want: "Point{1, 2}",
 		},
 	}
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
-			p := &Property{
-				Name:  tt.fields.Name,
-				Value: tt.fields.Value,
+			p := &Point{
+				X: tt.fields.X,
+				Y: tt.fields.Y,
 			}
 			if got := p.String(); got != tt.want {
 				t.Errorf("String() = %v, want %v", got, tt.want)
