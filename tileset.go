@@ -1,7 +1,10 @@
 package tilepix
 
 import (
+	"encoding/xml"
 	"fmt"
+	"io"
+	"os"
 	"path/filepath"
 
 	"github.com/faiface/pixel"
@@ -36,6 +39,32 @@ type Tileset struct {
 
 	// parentMap is the map which contains this object
 	parentMap *Map
+}
+
+func readTileset(r io.Reader) (*Tileset, error) {
+	log.Debug("readTileset: reading from io.Reader")
+
+	d := xml.NewDecoder(r)
+
+	var t Tileset
+	if err := d.Decode(&t); err != nil {
+		log.WithError(err).Error("readTileset: could not decode to Tileset")
+		return nil, err
+	}
+	return &t, nil
+}
+
+func readTilesetFile(filePath string) (*Tileset, error) {
+	log.WithField("Filepath", filePath).Debug("readTilesetFile: reading file")
+
+	f, err := os.Open(filePath)
+	if err != nil {
+		log.WithError(err).Error("ReadFile: could not open file")
+		return nil, err
+	}
+	defer f.Close()
+
+	return readTileset(f)
 }
 
 func (ts *Tileset) String() string {
