@@ -101,8 +101,6 @@ func TestMap_DrawAll(t *testing.T) {
 }
 
 func BenchmarkMap_DrawAll(b *testing.B) {
-	b.SetParallelism(1)
-
 	m, err := tilepix.ReadFile("examples/t1.tmx")
 	if err != nil {
 		b.Fatalf("Could not create TilePix map: %v", err)
