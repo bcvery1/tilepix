@@ -31,7 +31,7 @@ env:
 install: true
 
 before_script:
-  - go get -u github.com/golangci/golangci-lint/cmd/golangci-lint
+  - GOPROXY=direct go get -u github.com/golangci/golangci-lint/cmd/golangci-lint
 
 script:
   - golangci-lint run
