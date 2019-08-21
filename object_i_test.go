@@ -201,15 +201,19 @@ func TestObjectProperties(t *testing.T) {
 	if err != nil {
 		t.Fatal(err)
 	}
+
+	var foundProperty bool
 	for _, group := range m.ObjectGroups {
 		for _, object := range group.Objects {
 			if object.Properties[0].Name != "foo" {
 				t.Error("No properties")
 			}
-			return
+			foundProperty = true
 		}
 	}
-	t.Fatal("No property found")
+	if !foundProperty {
+		t.Fatal("No property found")
+	}
 }
 
 func TestObject_GetTile(t *testing.T) {
