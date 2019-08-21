@@ -29,9 +29,6 @@ type Data struct {
 	RawData     []byte `xml:",innerxml"`
 	// DataTiles is only used when layer encoding is XML.
 	DataTiles []*DataTile `xml:"tile"`
-
-	// parentMap is the map which contains this object
-	parentMap *Map
 }
 
 func (d *Data) String() string {
@@ -95,8 +92,4 @@ func (d *Data) decodeCSV() ([]GID, error) {
 		gids[i] = GID(d)
 	}
 	return gids, nil
-}
-
-func (d *Data) setParent(m *Map) {
-	d.parentMap = m
 }
