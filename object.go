@@ -40,7 +40,7 @@ type Object struct {
 	parentMap *Map
 }
 
-// GetRect will return a pixel.Circle representation of this object relative to the map (the co-ordinates will match
+// GetEllipse will return a pixel.Circle representation of this object relative to the map (the co-ordinates will match
 // those as drawn in Tiled).  If the object type is not `EllipseObj` this function will return `pixel.C(pixel.ZV, 0)`
 // and an error.
 //
@@ -129,6 +129,8 @@ func (o *Object) GetPolyLine() ([]pixel.Vec, error) {
 	return pixelPoints, nil
 }
 
+// GetTile will return the object decoded into a DecodedTile struct.  If this
+// object is not a DecodedTile, this function will return `nil` and an error.
 func (o *Object) GetTile() (*DecodedTile, error) {
 	if o.GetType() != TileObj {
 		log.WithError(ErrInvalidObjectType).WithField("Object type", o.GetType()).Error("Object.GetTile: object type mismatch")
