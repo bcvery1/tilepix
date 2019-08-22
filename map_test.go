@@ -90,7 +90,7 @@ func TestMap_DrawAll(t *testing.T) {
 		t.Fatalf("Could not create TilePix map: %v", err)
 	}
 
-	target, err := pixelgl.NewWindow(pixelgl.WindowConfig{Bounds:pixel.R(0, 0, 100, 100)})
+	target, err := pixelgl.NewWindow(pixelgl.WindowConfig{Bounds: pixel.R(0, 0, 100, 100)})
 	if err != nil {
 		t.Fatal(err)
 	}
@@ -98,4 +98,23 @@ func TestMap_DrawAll(t *testing.T) {
 	if err := m.DrawAll(target, color.Transparent, pixel.IM); err != nil {
 		t.Fatalf("Could not draw map: %v", err)
 	}
+}
+
+func BenchmarkMap_DrawAll(b *testing.B) {
+	m, err := tilepix.ReadFile("examples/t1.tmx")
+	if err != nil {
+		b.Fatalf("Could not create TilePix map: %v", err)
+	}
+
+	target, err := pixelgl.NewWindow(pixelgl.WindowConfig{Bounds: pixel.R(0, 0, 100, 100)})
+	if err != nil {
+		b.Fatal(err)
+	}
+
+	// Run as sub benchmark to prevent multiple windows being created
+	b.Run("Drawing", func(bb *testing.B) {
+		for i := 0; i < bb.N; i++ {
+			_ = m.DrawAll(target, color.Transparent, pixel.IM)
+		}
+	})
 }

@@ -21,17 +21,6 @@ func loadPicture(img io.Reader) (pixel.Picture, error) {
 	return pixel.PictureDataFromImage(imgDecoded), nil
 }
 
-func loadPictureFromFile(path string) (pixel.Picture, error) {
-	f, err := os.OpenFile(path, os.O_RDONLY, 0444)
-	if err != nil {
-		log.WithError(err).WithField("Filepath", path).Error("loadPictureFromFile: could not open file")
-		return nil, err
-	}
-	defer f.Close()
-
-	return loadPicture(f)
-}
-
 func loadSprite(img io.Reader) (*pixel.Sprite, pixel.Picture, error) {
 	pic, err := loadPicture(img)
 	if err != nil {
