@@ -1,6 +1,5 @@
 [![Build Status](https://travis-ci.org/bcvery1/tilepix.svg?branch=master)](https://travis-ci.org/bcvery1/tilepix)
 [![Go Report Card](https://goreportcard.com/badge/github.com/bcvery1/tilepix)](https://goreportcard.com/report/github.com/bcvery1/tilepix)
-[![Join the chat at https://gitter.im/TilePix](https://badges.gitter.im/Join%20Chat.svg)](https://gitter.im/TilePix?utm_source=badge&utm_medium=badge&utm_campaign=pr-badge&utm_content=badge)
 [![GitHub](https://img.shields.io/github/license/bcvery1/tilepix.svg)](https://github.com/bcvery1/tilepix/blob/master/LICENSE)
 [![GoDoc](https://godoc.org/github.com/bcvery1/tilepix?status.svg)](https://godoc.org/github.com/bcvery1/tilepix)
 
@@ -8,7 +7,7 @@
 TilePix is a complementary library, designed to be used with the [Pixel](https://github.com/faiface/pixel) library (see
 below for more details on Pixel).  TilePix was born out of [Ludum Dare](https://ldjam.com/); having found that a vast
 amount of very limited time during the Ludum Dare weekends was used planing out map layouts, and defining collision
-or activation areas.  TilePix should make those activities a trivially short amount of time. 
+or activation areas.  TilePix should make those activities a trivially short amount of time.
 
 ## Pixel
 This library is a complement to the [Pixel](https://github.com/faiface/pixel) 2D games library, and is largely inspired
@@ -40,14 +39,14 @@ package main
 
 import (
 	"image/color"
-	
+
 	// We must use blank imports for any image formats in the tileset image sources.
 	// You will get an error if a blank import is not made; TilePix does not import
 	// specific image formats, that is the responsibility of the calling code.
 	_ "image/png"
-	
+
 	"github.com/bcvery1/tilepix"
-	
+
 	"github.com/faiface/pixel"
 	"github.com/faiface/pixel/pixelgl"
 )
@@ -58,26 +57,26 @@ func run() {
 		Bounds: pixel.R(0, 0, 640, 320),
 		VSync: true,
 	}
-	
+
 	win, err := pixelgl.NewWindow(cfg)
 	if err != nil {
 		panic(err)
 	}
-	
+
 	// Load and initialise the map.
 	m, err := tilepix.ReadFile("myMap.tmx")
 	if err != nil {
 		panic(err)
 	}
-	
+
 	for !win.Closed() {
 		win.Clear(color.White)
-		
+
 		// Draw all layers to the window.
 		if err := m.DrawAll(win, color.White, pixel.IM); err != nil {
 			panic(err)
 		}
-		
+
 		win.Update()
 	}
 }
@@ -90,7 +89,5 @@ func main() {
 Futher examples can be found in the [examples directory](https://github.com/bcvery1/tilepix/tree/master/examples).
 
 ## Contributing
-Thanks for considering contributing to TilePix; for details on how you can contribute, please consult the 
+Thanks for considering contributing to TilePix; for details on how you can contribute, please consult the
 [contribution guide](https://github.com/bcvery1/tilepix/blob/master/CONTRIBUTING.md).
-
-Also, feel free to join us in the [Gitter chat room](https://gitter.im/TilePix).
