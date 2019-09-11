@@ -1,6 +1,9 @@
 package tilepix_test
 
 import (
+	"bytes"
+	"encoding/xml"
+	"io"
 	"io/ioutil"
 	"testing"
 
@@ -81,4 +84,55 @@ func TestReadFile(t *testing.T) {
 			}
 		})
 	}
+}
+
+func TestRead(t *testing.T) {
+	tests := []struct {
+		name    string
+		input   io.Reader
+		dir     string
+		want    *tilepix.Map
+		wantErr bool
+	}{
+		{
+			name:    "Missing columns parameter in tileset",
+			input:   getInput(),
+			dir:     "testdata",
+			want:    nil,
+			wantErr: true,
+		},
+	}
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			_, err := tilepix.Read(tt.input, tt.dir)
+
+			expectedError := "Tileset columns value not valid"
+
+			if tt.wantErr && err == nil {
+				t.Errorf("tsx.Read: expected error but not nil")
+			}
+
+			if tt.wantErr && err != nil && err.Error() != expectedError {
+				t.Errorf("tsx.Read: expected error '%s' but not '%s'", expectedError, err.Error())
+			}
+		})
+	}
+}
+
+func getInput() io.Reader {
+	m := tilepix.Map{
+		Version:     "1.2",
+		Orientation: "orthogonal",
+		Width:       640,
+		Height:      480,
+		TileWidth:   32,
+		TileHeight:  32,
+		Tilesets: []*tilepix.Tileset{
+			&tilepix.Tileset{
+				Source: "tileset_no_columns.tsx",
+			},
+		},
+	}
+	byteMap, _ := xml.Marshal(m)
+	return bytes.NewReader(byteMap)
 }
