@@ -51,7 +51,7 @@ func readTileset(r io.Reader) (*Tileset, error) {
 		log.WithError(err).Error("readTileset: could not decode to Tileset")
 		return nil, err
 	}
-	return &t, nil
+	return validate(t)
 }
 
 func readTilesetFile(filePath string) (*Tileset, error) {
@@ -65,6 +65,13 @@ func readTilesetFile(filePath string) (*Tileset, error) {
 	defer f.Close()
 
 	return readTileset(f)
+}
+
+func validate(t Tileset) (*Tileset, error) {
+	if t.Columns < 1 {
+		return nil, fmt.Errorf("Tileset columns value not valid")
+	}
+	return &t, nil
 }
 
 func (ts *Tileset) String() string {

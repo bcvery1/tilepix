@@ -20,8 +20,8 @@ Ben @bcvery1
 
 ## Contributors
  - Andrea Manzini @ilmanzo
- - Y.Horie @u5surf
- - Thomas Lacroix @TooHTooH
  - Patrick Erber @perber
+ - Sergio Vera @svera
  - Tyler Brockmeyer @tjbrockmeyer
-
+ - Thomas Lacroix @TooHTooH
+ - Y.Horie @u5surf

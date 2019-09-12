@@ -16,7 +16,7 @@ var (
 )
 
 func run() {
-	m, err := tilepix.ReadFile("basic.tmx")
+	m, err := tilepix.ReadFile("map.tmx")
 	if err != nil {
 		panic(err)
 	}

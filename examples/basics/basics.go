@@ -5,6 +5,8 @@ import (
 	"math"
 	"time"
 
+	_ "image/png"
+
 	"github.com/bcvery1/tilepix"
 
 	"github.com/faiface/pixel"
