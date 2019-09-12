@@ -88,32 +88,32 @@ func TestReadFile(t *testing.T) {
 
 func TestRead(t *testing.T) {
 	tests := []struct {
-		name    string
-		input   io.Reader
-		dir     string
-		want    *tilepix.Map
-		wantErr bool
+		name        string
+		input       io.Reader
+		dir         string
+		want        *tilepix.Map
+		wantErr     bool
+		expectedErr string
 	}{
 		{
-			name:    "Missing columns parameter in tileset",
-			input:   getInput(),
-			dir:     "testdata",
-			want:    nil,
-			wantErr: true,
+			name:        "Missing columns parameter in tileset",
+			input:       getInput(),
+			dir:         "testdata",
+			want:        nil,
+			wantErr:     true,
+			expectedErr: "Tileset columns value not valid",
 		},
 	}
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
 			_, err := tilepix.Read(tt.input, tt.dir)
 
-			expectedError := "Tileset columns value not valid"
-
 			if tt.wantErr && err == nil {
 				t.Errorf("tsx.Read: expected error but not nil")
 			}
 
-			if tt.wantErr && err != nil && err.Error() != expectedError {
-				t.Errorf("tsx.Read: expected error '%s' but not '%s'", expectedError, err.Error())
+			if tt.wantErr && err != nil && err.Error() != tt.expectedErr {
+				t.Errorf("tsx.Read: expected error '%s' but not '%s'", tt.expectedErr, err.Error())
 			}
 		})
 	}
