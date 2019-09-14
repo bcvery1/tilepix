@@ -39,9 +39,11 @@ type Tileset struct {
 
 	// parentMap is the map which contains this object
 	parentMap *Map
+	// dir is the directory the tsx file is located in.  This is used to access assets via a relative path.
+	dir string
 }
 
-func readTileset(r io.Reader) (*Tileset, error) {
+func readTileset(r io.Reader, dir string) (*Tileset, error) {
 	log.Debug("readTileset: reading from io.Reader")
 
 	d := xml.NewDecoder(r)
@@ -51,6 +53,9 @@ func readTileset(r io.Reader) (*Tileset, error) {
 		log.WithError(err).Error("readTileset: could not decode to Tileset")
 		return nil, err
 	}
+
+	t.dir = dir
+
 	return validate(t)
 }
 
@@ -64,7 +69,9 @@ func readTilesetFile(filePath string) (*Tileset, error) {
 	}
 	defer f.Close()
 
-	return readTileset(f)
+	dir := filepath.Dir(filePath)
+
+	return readTileset(f, dir)
 }
 
 func validate(t Tileset) (*Tileset, error) {
@@ -107,7 +114,7 @@ func (ts *Tileset) setSprite() pixel.Picture {
 		return ts.picture
 	}
 
-	sprite, pictureData, err := loadSpriteFromFile(filepath.Join(ts.parentMap.dir, ts.Image.Source))
+	sprite, pictureData, err := loadSpriteFromFile(filepath.Join(ts.dir, ts.Image.Source))
 	if err != nil {
 		log.WithError(err).Error("Tileset.setSprite: could not load sprite from file")
 		return nil
