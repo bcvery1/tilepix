@@ -2,6 +2,7 @@ package tilepix
 
 import (
 	"fmt"
+	"math"
 
 	"github.com/faiface/pixel"
 )
@@ -43,8 +44,8 @@ type DecodedTile struct {
 	DiagonalFlip   bool
 	Nil            bool
 
-	sprite *pixel.Sprite
-	pos    pixel.Vec
+	sprite    *pixel.Sprite
+	transform pixel.Matrix
 
 	// parentMap is the map which contains this object
 	parentMap *Map
@@ -62,9 +63,21 @@ func (t *DecodedTile) Draw(ind, columns, numRows int, ts *Tileset, target pixel.
 
 		// Calculate the framing for the tile within its tileset's source image
 		gamePos := indexToGamePos(ind, t.parentMap.Width, t.parentMap.Height)
-		t.pos = gamePos.ScaledXY(pixel.V(float64(ts.TileWidth), float64(ts.TileHeight))).Add(pixel.V(float64(ts.TileWidth), float64(ts.TileHeight)).Scaled(0.5))
+		pos := gamePos.ScaledXY(pixel.V(float64(ts.TileWidth), float64(ts.TileHeight))).Add(pixel.V(float64(ts.TileWidth), float64(ts.TileHeight)).Scaled(0.5))
+		transform := pixel.IM.Moved(pos)
+		if t.DiagonalFlip {
+			transform = transform.Rotated(pos, math.Pi/2)
+			transform = transform.ScaledXY(pos, pixel.V(1, -1))
+		}
+		if t.HorizontalFlip {
+			transform = transform.ScaledXY(pos, pixel.V(-1, 1))
+		}
+		if t.VerticalFlip {
+			transform = transform.ScaledXY(pos, pixel.V(1, -1))
+		}
+		t.transform = transform
 	}
-	t.sprite.Draw(target, pixel.IM.Moved(t.pos.Add(offset)))
+	t.sprite.Draw(target, t.transform.Moved(offset))
 }
 
 func (t *DecodedTile) String() string {
