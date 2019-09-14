@@ -145,7 +145,6 @@ func (o *Object) GetTile() (*DecodedTile, error) {
 		o.tile = &DecodedTile{
 			ID:        o.GID,
 			Tileset:   ts,
-			pos:       pixel.V(o.X, o.Y),
 			parentMap: o.parentMap,
 		}
 
