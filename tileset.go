@@ -83,6 +83,11 @@ func (ts Tileset) GenerateTileObjectLayer(tileLayers []*TileLayer) ObjectGroup {
 	for _, tl := range tileLayers {
 		// Loop all DecodedTiles in the TileLayer
 		for ind, t := range tl.DecodedTiles {
+			if t.Nil {
+				// Skip blank tiles.
+				continue
+			}
+
 			// Try get the Tiles' ObjectGroup.
 			og, ok := objs[t.ID]
 			if !ok {
@@ -93,11 +98,12 @@ func (ts Tileset) GenerateTileObjectLayer(tileLayers []*TileLayer) ObjectGroup {
 			// Loop all objects in the Tiles' ObjectGroup.
 			for _, obs := range og.Objects {
 				// Create a new Object based on the relative position of the Object and the DecodedTile.
-				o := obs
-				o.X += t.Position(ind, &ts).X
-				o.Y += t.Position(ind, &ts).Y
+				o := *obs
+				tilePos := t.Position(ind, &ts)
+				o.X += tilePos.X
+				o.Y += tilePos.Y
 
-				group.Objects = append(group.Objects, o)
+				group.Objects = append(group.Objects, &o)
 			}
 		}
 	}
@@ -160,7 +166,9 @@ func (ts *Tileset) setSprite() pixel.Picture {
 func (ts Tileset) TileObjects() map[ID]*ObjectGroup {
 	objs := make(map[ID]*ObjectGroup)
 	for _, t := range ts.Tiles {
-		objs[t.ID] = t.ObjectGroup
+		if t.ObjectGroup != nil {
+			objs[t.ID] = t.ObjectGroup
+		}
 	}
 
 	return objs
