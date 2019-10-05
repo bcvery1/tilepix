@@ -18,6 +18,8 @@ import (
 type Tile struct {
 	ID    ID     `xml:"id,attr"`
 	Image *Image `xml:"image"`
+	// ObjectGroup is set if objects have been added to individual sprites in Tiled.
+	ObjectGroup *ObjectGroup `xml:"objectgroup,omitempty"`
 
 	// parentMap is the map which contains this object
 	parentMap *Map
@@ -62,8 +64,7 @@ func (t *DecodedTile) Draw(ind, columns, numRows int, ts *Tileset, target pixel.
 		t.setSprite(columns, numRows, ts)
 
 		// Calculate the framing for the tile within its tileset's source image
-		gamePos := indexToGamePos(ind, t.parentMap.Width, t.parentMap.Height)
-		pos := gamePos.ScaledXY(pixel.V(float64(ts.TileWidth), float64(ts.TileHeight))).Add(pixel.V(float64(ts.TileWidth), float64(ts.TileHeight)).Scaled(0.5))
+		pos := t.Position(ind, ts)
 		transform := pixel.IM.Moved(pos)
 		if t.DiagonalFlip {
 			transform = transform.Rotated(pos, math.Pi/2)
@@ -78,6 +79,12 @@ func (t *DecodedTile) Draw(ind, columns, numRows int, ts *Tileset, target pixel.
 		t.transform = transform
 	}
 	t.sprite.Draw(target, t.transform.Moved(offset))
+}
+
+// Position returns the relative game position.
+func (t DecodedTile) Position(ind int, ts *Tileset) pixel.Vec {
+	gamePos := indexToGamePos(ind, t.parentMap.Width, t.parentMap.Height)
+	return gamePos.ScaledXY(pixel.V(float64(ts.TileWidth), float64(ts.TileHeight))).Add(pixel.V(float64(ts.TileWidth), float64(ts.TileHeight)).Scaled(0.5))
 }
 
 func (t *DecodedTile) String() string {

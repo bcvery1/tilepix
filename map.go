@@ -73,6 +73,14 @@ func (m *Map) DrawAll(target pixel.Target, clearColour color.Color, mat pixel.Ma
 	return nil
 }
 
+// GenerateTileObjectLayer will create an object layer which contains all objects as defined by individual tiles.
+func (m *Map) GenerateTileObjectLayer() {
+	for _, ts := range m.Tilesets {
+		objGroup := ts.GenerateTileObjectLayer(m.TileLayers)
+		m.ObjectGroups = append(m.ObjectGroups, &objGroup)
+	}
+}
+
 // GetImageLayerByName returns a Map's ImageLayer by its name
 func (m *Map) GetImageLayerByName(name string) *ImageLayer {
 	for _, l := range m.ImageLayers {
