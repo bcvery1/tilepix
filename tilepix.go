@@ -12,6 +12,7 @@ package tilepix
 import (
 	"encoding/xml"
 	"errors"
+	"fmt"
 	"io"
 	"os"
 	"path/filepath"
@@ -159,6 +160,7 @@ func ReadFile(filePath string) (*Map, error) {
 	defer f.Close()
 
 	dir := filepath.Dir(filePath)
+	fmt.Println(dir)
 
 	return Read(f, dir)
 }
