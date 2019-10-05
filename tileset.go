@@ -153,7 +153,7 @@ func (ts *Tileset) setSprite() pixel.Picture {
 
 	sprite, pictureData, err := loadSpriteFromFile(filepath.Join(ts.dir, ts.Image.Source))
 	if err != nil {
-		log.WithError(err).Error("Tileset.setSprite: could not load sprite from file")
+		log.WithField("Filepath", filepath.Join(ts.dir, ts.Image.Source)).WithError(err).Error("Tileset.setSprite: could not load sprite from file")
 		return nil
 	}
 
