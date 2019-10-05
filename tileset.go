@@ -74,6 +74,43 @@ func readTilesetFile(filePath string) (*Tileset, error) {
 	return readTileset(f, dir)
 }
 
+// GenerateTileObjectLayer will create a new ObjectGroup for the mapping of Objects to individual tiles.
+func (ts Tileset) GenerateTileObjectLayer(tileLayers []*TileLayer) ObjectGroup {
+	group := ObjectGroup{Name: fmt.Sprintf("%s-objectgroup", ts.Name)}
+	objs := ts.TileObjects()
+
+	// Loop all TileLayers in map.
+	for _, tl := range tileLayers {
+		// Loop all DecodedTiles in the TileLayer
+		for ind, t := range tl.DecodedTiles {
+			if t.Nil {
+				// Skip blank tiles.
+				continue
+			}
+
+			// Try get the Tiles' ObjectGroup.
+			og, ok := objs[t.ID]
+			if !ok {
+				// Not object groups for this Tile.
+				continue
+			}
+
+			// Loop all objects in the Tiles' ObjectGroup.
+			for _, obs := range og.Objects {
+				// Create a new Object based on the relative position of the Object and the DecodedTile.
+				o := *obs
+				tilePos := t.Position(ind, &ts)
+				o.X += tilePos.X
+				o.Y += tilePos.Y
+
+				group.Objects = append(group.Objects, &o)
+			}
+		}
+	}
+
+	return group
+}
+
 func validate(t Tileset) (*Tileset, error) {
 	if t.Columns < 1 {
 		return nil, fmt.Errorf("Tileset columns value not valid")
@@ -123,6 +160,18 @@ func (ts *Tileset) setSprite() pixel.Picture {
 	ts.sprite = sprite
 	ts.picture = pictureData
 	return ts.picture
+}
+
+// TileObjects will return all ObjectGroups contained in Tiles.
+func (ts Tileset) TileObjects() map[ID]*ObjectGroup {
+	objs := make(map[ID]*ObjectGroup)
+	for _, t := range ts.Tiles {
+		if t.ObjectGroup != nil {
+			objs[t.ID] = t.ObjectGroup
+		}
+	}
+
+	return objs
 }
 
 func getTileset(l *TileLayer) (tileset *Tileset, isEmpty, usesMultipleTilesets bool) {

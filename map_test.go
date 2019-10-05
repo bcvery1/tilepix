@@ -84,6 +84,47 @@ func TestCentre(t *testing.T) {
 	}
 }
 
+func TestMap_GenerateTileObjectLayer(t *testing.T) {
+	m, err := tilepix.ReadFile("testdata/tileobjectgroups.tmx")
+	if err != nil {
+		t.Fatal(err)
+	}
+	if err := m.GenerateTileObjectLayer(); err != nil {
+		t.Fatal(err)
+	}
+
+	const objectLayerName = "singleWhite-objectgroup"
+
+	l := m.GetObjectLayerByName(objectLayerName)
+	if l == nil {
+		t.Fatalf("no object group by name '%s", objectLayerName)
+	}
+
+	if len(l.Objects) != 5 {
+		t.Fatalf("Expected 5 objects, got %d", len(l.Objects))
+	}
+
+	expectedPos := [...]pixel.Rect{
+		pixel.R(16, 144, 48, 176),
+		pixel.R(48, 144, 80, 176),
+		pixel.R(80, 144, 112, 176),
+		pixel.R(112, 144, 144, 176),
+		pixel.R(144, 144, 176, 176),
+	}
+
+	for i, obj := range l.Objects {
+		r, err := obj.GetRect()
+		if err != nil {
+			t.Fatal(err)
+		}
+
+		expR := expectedPos[i]
+		if !r.Max.Eq(expR.Max) || !r.Min.Eq(expR.Min) {
+			t.Fatalf("Mismatching objects, expected %v, got %v", expR, r)
+		}
+	}
+}
+
 func TestMap_DrawAll(t *testing.T) {
 	m, err := tilepix.ReadFile("examples/t1.tmx")
 	if err != nil {
