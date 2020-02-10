@@ -13,6 +13,7 @@ import (
 	"encoding/xml"
 	"errors"
 	"io"
+	"net/http"
 	"os"
 	"path/filepath"
 
@@ -85,10 +86,18 @@ type DataTile struct {
 	GID GID `xml:"gid,attr"`
 }
 
-// Read will read, decode and initialise a Tiled Map from a data reader.
-func Read(r io.Reader, dir string) (*Map, error) {
-	log.Debug("Read: reading from io.Reader")
+func osOpen(name string) (http.File, error) {
+	f, err := os.Open(name)
+	return f, err
+}
 
+// Read will read, decode and initialise a Tiled Map from a data reader.
+// openFileFunc is used to retrieve tilesets and can be nil, in which case os.Open is used.
+func Read(r io.Reader, dir string, openFileFunc func(name string) (http.File, error)) (*Map, error) {
+	log.Debug("Read: reading from io.Reader")
+	if openFileFunc == nil {
+		openFileFunc = osOpen
+	}
 	var m Map
 	if err := xml.NewDecoder(r).Decode(&m); err != nil {
 		log.WithError(err).Error("Read: could not decode to Map")
@@ -105,7 +114,13 @@ func Read(r io.Reader, dir string) (*Map, error) {
 	log.WithField("Tileset count", len(m.Tilesets)).Debug("Read: checking for tileset sources")
 	for i, ts := range m.Tilesets {
 		if ts.Source != "" {
-			sourceTs, err := readTilesetFile(filepath.Join(dir, ts.Source))
+			f, err := openFileFunc(filepath.Join(dir, ts.Source))
+			if err != nil {
+				log.WithError(err).Error("Read: could not read tileset source")
+				return nil, err
+			}
+			sourceTs, err := readTileset(f, dir)
+			_ = f.Close()
 			if err != nil {
 				log.WithError(err).Error("Read: could not read tileset source")
 				return nil, err
@@ -160,5 +175,5 @@ func ReadFile(filePath string) (*Map, error) {
 
 	dir := filepath.Dir(filePath)
 
-	return Read(f, dir)
+	return Read(f, dir, nil)
 }

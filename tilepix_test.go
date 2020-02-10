@@ -106,7 +106,7 @@ func TestRead(t *testing.T) {
 	}
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
-			_, err := tilepix.Read(tt.input, tt.dir)
+			_, err := tilepix.Read(tt.input, tt.dir, nil)
 
 			if tt.wantErr && err == nil {
 				t.Errorf("tsx.Read: expected error but not nil")
