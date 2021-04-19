@@ -34,6 +34,7 @@ type Map struct {
 	ObjectGroups []*ObjectGroup `xml:"objectgroup"`
 	Infinite     bool           `xml:"infinite,attr"`
 	ImageLayers  []*ImageLayer  `xml:"imagelayer"`
+        BackgroundColor string      `xml:"backgroundcolor,attr"`
 
 	canvas *pixelgl.Canvas
 	// dir is the directory the tmx file is located in.  This is used to access images for tilesets via a relative path.
