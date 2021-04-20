@@ -25,3 +25,4 @@ Ben @bcvery1
  - Tyler Brockmeyer @tjbrockmeyer
  - Thomas Lacroix @TooHTooH
  - Y.Horie @u5surf
+ - Olof Bjarnason @objarni
