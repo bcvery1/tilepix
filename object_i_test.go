@@ -8,7 +8,7 @@ import (
 	_ "image/png"
 
 	"github.com/bcvery1/tilepix"
-	"github.com/faiface/pixel"
+	pixel "github.com/duysqubix/pixel2"
 )
 
 func TestObject_GetEllipse(t *testing.T) {

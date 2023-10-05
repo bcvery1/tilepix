@@ -8,8 +8,8 @@ import (
 	_ "image/png"
 
 	"github.com/bcvery1/tilepix"
-	"github.com/faiface/pixel"
-	"github.com/faiface/pixel/pixelgl"
+	pixel "github.com/duysqubix/pixel2"
+	"github.com/duysqubix/pixel2/pixelgl"
 )
 
 func TestMain(m *testing.M) {

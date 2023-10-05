@@ -4,7 +4,7 @@ import (
 	"fmt"
 	"math"
 
-	"github.com/faiface/pixel"
+	pixel "github.com/duysqubix/pixel2"
 )
 
 /*

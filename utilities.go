@@ -5,8 +5,7 @@ import (
 	"io"
 	"os"
 
-	"github.com/faiface/pixel"
-
+	pixel "github.com/duysqubix/pixel2"
 	log "github.com/sirupsen/logrus"
 )
 
