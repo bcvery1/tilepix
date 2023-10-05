@@ -25,10 +25,6 @@ TilePix is a work-in-progress project; as such, expect bugs and missing features
 feel is missing, please consider [contributing](https://github.com/bcvery1/tilepix/blob/master/CONTRIBUTING.md) - simply
 (and correctly) raising issues is just as valuable as writing code!
 
-### Releases
-The aim is that releases on this library will fairly regular, and well planned.  You can use
-[Go modules](https://github.com/golang/go/wiki/Modules) with TilePix if you want version security.
-
 ## Example
 Here is a very basic example of using the library.  It is advisable to view the excellent
 [Pixel tutorials](https://github.com/faiface/pixel/wiki) before trying to understand this package, as TilePix is very
@@ -47,8 +43,8 @@ import (
 
 	"github.com/bcvery1/tilepix"
 
-	"github.com/faiface/pixel"
-	"github.com/faiface/pixel/pixelgl"
+	pixel "github.com/duysqubix/pixel2"
+	"github.com/duysqubix/pixel2/pixelgl"
 )
 
 func run() {
@@ -86,7 +82,7 @@ func main() {
 }
 ```
 
-Futher examples can be found in the [examples directory](https://github.com/bcvery1/tilepix/tree/master/examples).
+Further examples can be found in the [examples directory](https://github.com/bcvery1/tilepix/tree/master/examples).
 
 ## Contributing
 Thanks for considering contributing to TilePix; for details on how you can contribute, please consult the
