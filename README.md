@@ -4,21 +4,22 @@
 [![GoDoc](https://godoc.org/github.com/bcvery1/tilepix?status.svg)](https://godoc.org/github.com/bcvery1/tilepix)
 
 # ![TilePixLogo](https://github.com/bcvery1/tilepix/blob/master/.github/assets/logo_small.png) TilePix
-TilePix is a complementary library, designed to be used with the [Pixel](https://github.com/faiface/pixel) library (see
+TilePix is a complementary library, designed to be used with the [Pixel](https://github.com/duysqubix/pixel2) library (see
 below for more details on Pixel).  TilePix was born out of [Ludum Dare](https://ldjam.com/); having found that a vast
 amount of very limited time during the Ludum Dare weekends was used planing out map layouts, and defining collision
 or activation areas.  TilePix should make those activities a trivially short amount of time.
 
 ## Pixel
-This library is a complement to the [Pixel](https://github.com/faiface/pixel) 2D games library, and is largely inspired
+This library is a complement to the [Pixel](https://github.com/duysqubix/pixel2) 2D games library, and is largely inspired
 by it.  A huge thanks to [faiface](https://github.com/faiface) for one, giving us access to such a fantastic library;
-and two, providing the inspiration for this library!
+and two, providing the inspiration for this library! Further thanks to [duysqubix](https://github.com/duysqubix) and
+collaborators for continuing the effort with `Pixel2`.
 
 TilePix would not have been possible without the great amount of care and effort that has been put into
-[Pixel](https://github.com/faiface/pixel).
+[Pixel](https://github.com/duysqubix/pixel2).
 
 ### Legal
-Pixel is subject to the [MIT](https://github.com/faiface/pixel/blob/master/LICENSE) licence.
+Pixel is subject to the [MIT](https://github.com/duysqubix/pixel2/blob/master/LICENSE) licence.
 
 ## Stability
 TilePix is a work-in-progress project; as such, expect bugs and missing features.  If you notice a bug or a feature you
@@ -27,7 +28,7 @@ feel is missing, please consider [contributing](https://github.com/bcvery1/tilep
 
 ## Example
 Here is a very basic example of using the library.  It is advisable to view the excellent
-[Pixel tutorials](https://github.com/faiface/pixel/wiki) before trying to understand this package, as TilePix is very
+[Pixel tutorials](https://github.com/duysqubix/pixel2/wiki) before trying to understand this package, as TilePix is very
 Pixel centric.
 
 ```go
