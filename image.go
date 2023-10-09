@@ -4,7 +4,7 @@ import (
 	"fmt"
 	"path/filepath"
 
-	pixel "github.com/duysqubix/pixel2"
+	"github.com/gopxl/pixel"
 	log "github.com/sirupsen/logrus"
 )
 

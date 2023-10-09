@@ -4,9 +4,8 @@ import (
 	"fmt"
 	"image/color"
 
-	pixel "github.com/duysqubix/pixel2"
-	"github.com/duysqubix/pixel2/pixelgl"
-
+	"github.com/gopxl/pixel"
+	"github.com/gopxl/pixel/pixelgl"
 	log "github.com/sirupsen/logrus"
 )
 
